@@ -8,8 +8,8 @@ export default async function OfflinePage({ params }: { params: Promise<{ locale
   const t = await getTranslations('errors')
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-white">
-      <EmptyState icon={<WifiOff className="w-12 h-12" />} title={t('offlineTitle')} text={t('offlineText')} />
+    <div className="min-h-[70dvh] flex items-center justify-center px-4">
+      <EmptyState icon={<WifiOff />} title={t('offlineTitle')} text={t('offlineText')} />
     </div>
   )
 }

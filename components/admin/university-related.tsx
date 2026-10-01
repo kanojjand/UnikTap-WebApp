@@ -11,7 +11,7 @@ import {
   deleteAdmissionBlock, deleteImage, deleteMajor, saveAdmissionBlock, saveImage, saveMajor, saveScoreHistory,
 } from '@/lib/actions/admin-universities'
 import { deleteUniversityMedia, uploadUniversityMedia } from '@/lib/actions/uploads'
-import { formatMoney } from '@/lib/utils'
+import { formatMoney, majorCode, majorName } from '@/lib/utils'
 import type { AdmissionBlock, Specialty, UniversityImage, UniversityMajor } from '@/types/domain'
 
 const KIND_LABELS: Record<string, string> = {
@@ -148,7 +148,7 @@ export function MajorsEditor({
   specialties: Specialty[]
 }) {
   const { pending, run } = useAction()
-  const [draft, setDraft] = useState({ specialty_id: '', fee_per_year: '', grant_score: '', paid_min_score: '', grants_count: '' })
+  const [draft, setDraft] = useState({ specialty_id: '', program_code: '', program_name_ru: '', fee_per_year: '', grant_score: '', paid_min_score: '', grants_count: '' })
   const [historyFor, setHistoryFor] = useState<string | null>(null)
   const [historyDraft, setHistoryDraft] = useState({ year: new Date().getFullYear(), grant_score: '', paid_min_score: '', grants_count: '' })
 
@@ -170,9 +170,14 @@ export function MajorsEditor({
           <tbody className="divide-y divide-gray-100">
             {majors.map((major) => (
               <tr key={major.id} className={major.deleted_at ? 'opacity-40' : ''}>
-                <td className="py-3 px-4 font-mono text-gray-500">{major.specialty?.code}</td>
+                <td className="py-3 px-4 font-mono text-gray-500">{majorCode(major)}</td>
                 <td className="py-3 px-4">
-                  {major.specialty?.name_ru}
+                  {majorName(major, 'ru')}
+                  {major.program_name_ru && major.specialty ? (
+                    <span className="block text-xs text-gray-400 mt-0.5">
+                      {major.specialty.code} · {major.specialty.name_ru}
+                    </span>
+                  ) : null}
                   <button
                     onClick={() => setHistoryFor(historyFor === major.id ? null : major.id)}
                     className="block text-xs text-corpBlue mt-1"
@@ -296,7 +301,7 @@ export function MajorsEditor({
 
       <div className="border border-dashed border-gray-200 rounded-xl p-4 grid md:grid-cols-6 gap-3 items-end">
         <div className="md:col-span-2">
-          <Field label="Специальность">
+          <Field label="Группа ОП" hint="от неё берутся предметы ЕНТ">
             {({ id }) => (
               <Select id={id} surface="admin" value={draft.specialty_id} onChange={(event) => setDraft({ ...draft, specialty_id: event.target.value })}>
                 <option value="">—</option>
@@ -306,6 +311,18 @@ export function MajorsEditor({
                   </option>
                 ))}
               </Select>
+            )}
+          </Field>
+        </div>
+        <Field label="Код ОП" hint="например, 6B01101">
+          {({ id }) => (
+            <Input id={id} surface="admin" value={draft.program_code} onChange={(event) => setDraft({ ...draft, program_code: event.target.value })} />
+          )}
+        </Field>
+        <div className="md:col-span-3">
+          <Field label="Название программы" hint="пусто — название группы">
+            {({ id }) => (
+              <Input id={id} surface="admin" value={draft.program_name_ru} onChange={(event) => setDraft({ ...draft, program_name_ru: event.target.value })} />
             )}
           </Field>
         </div>
@@ -333,6 +350,8 @@ export function MajorsEditor({
                 saveMajor({
                   university_id: universityId,
                   specialty_id: Number(draft.specialty_id),
+                  program_code: draft.program_code,
+                  program_name_ru: draft.program_name_ru,
                   degree: 'bachelor',
                   study_forms: ['full_time'],
                   languages: ['ru'],

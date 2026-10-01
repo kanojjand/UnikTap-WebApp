@@ -33,60 +33,82 @@ export function ReviewCard({
   const [reporting, setReporting] = useState(false)
   const [pending, startTransition] = useTransition()
 
+  function flip() {
+    setHelpful((current) => ({ count: current.count + (current.voted ? -1 : 1), voted: !current.voted }))
+  }
+
   function vote() {
     if (isGuest) return setWall(true)
+    // Отклик сразу, откатываем только если сервер не принял голос
+    flip()
     startTransition(async () => {
       const result = await voteHelpful(review.id)
-      if (!result.ok) return setWall(true)
-      setHelpful((current) => ({ count: current.count + (current.voted ? -1 : 1), voted: !current.voted }))
+      if (!result.ok) {
+        flip()
+        setWall(true)
+      }
     })
   }
 
   return (
-    <Card as="li" className="p-4">
-      <div className="flex justify-between items-start gap-3 mb-2">
-        <div>
-          <p className="font-bold text-sm text-gray-900">
-            {review.is_anonymous || !review.author_name ? t('anonymous') : review.author_name}
-          </p>
-          <p className="text-xs text-gray-400">
-            {[majorName, review.study_year ? `${review.study_year}` : null, formatDate(review.created_at, locale)]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
+    <Card as="li" className="p-4 md:p-5">
+      <div className="flex justify-between items-start gap-3 mb-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <span
+            className="w-10 h-10 rounded-full bg-subtle text-body font-semibold flex items-center justify-center shrink-0"
+            aria-hidden
+          >
+            {(review.is_anonymous || !review.author_name ? '?' : review.author_name).slice(0, 1).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="font-semibold text-[15px] text-ink truncate">
+              {review.is_anonymous || !review.author_name ? t('anonymous') : review.author_name}
+            </p>
+            <p className="text-sm text-muted truncate">
+              {[majorName, review.study_year ? `${review.study_year}` : null, formatDate(review.created_at, locale)]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          </div>
         </div>
-        <Rating value={review.rating} />
+        <Rating value={review.rating} className="shrink-0 mt-1" />
       </div>
 
-      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{review.body}</p>
+      <p className="text-[15px] text-body leading-relaxed whitespace-pre-line">{review.body}</p>
 
       {review.pros ? (
-        <p className="mt-3 text-sm bg-green-50 text-green-800 rounded-xl p-3">
-          <b className="block text-xs uppercase mb-1">{t('pros')}</b>
+        <div className="mt-3 text-[15px] text-body bg-success-soft rounded-xl p-3">
+          <b className="block text-sm font-semibold text-success mb-1">+ {t('pros')}</b>
           {review.pros}
-        </p>
+        </div>
       ) : null}
       {review.cons ? (
-        <p className="mt-2 text-sm bg-red-50 text-red-800 rounded-xl p-3">
-          <b className="block text-xs uppercase mb-1">{t('cons')}</b>
+        <div className="mt-2 text-[15px] text-body bg-danger-soft rounded-xl p-3">
+          <b className="block text-sm font-semibold text-danger mb-1">− {t('cons')}</b>
           {review.cons}
-        </p>
+        </div>
       ) : null}
 
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-line -mx-2">
         <button
+          type="button"
           onClick={vote}
           disabled={pending}
-          className={cn('text-xs flex items-center gap-1', helpful.voted ? 'text-corpBlue font-semibold' : 'text-gray-500')}
+          aria-pressed={helpful.voted}
+          className={cn(
+            'min-h-[44px] px-2 rounded-xl text-sm flex items-center gap-1.5 hover:bg-subtle transition-colors',
+            helpful.voted ? 'text-primary-ink font-semibold' : 'text-muted',
+          )}
         >
-          <ThumbsUp className="w-3.5 h-3.5" aria-hidden />
+          <ThumbsUp className="w-4 h-4" fill={helpful.voted ? 'currentColor' : 'none'} aria-hidden />
           {t('helpful', { count: helpful.count })}
         </button>
         <button
+          type="button"
           onClick={() => (isGuest ? setWall(true) : setReporting(true))}
-          className="text-xs text-gray-400 flex items-center gap-1"
+          className="min-h-[44px] px-2 rounded-xl text-sm text-muted flex items-center gap-1.5 hover:bg-subtle transition-colors ml-auto"
         >
-          <Flag className="w-3.5 h-3.5" aria-hidden />
+          <Flag className="w-4 h-4" aria-hidden />
           {t('report')}
         </button>
       </div>

@@ -77,7 +77,7 @@ export function Modal({ open, onClose, title, children, className }: BaseProps) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -86,29 +86,34 @@ export function Modal({ open, onClose, title, children, className }: BaseProps) 
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className={cn('bg-white w-full max-w-lg rounded-2xl shadow-modal overflow-hidden max-h-[90vh] flex flex-col', className)}
+        className={cn(
+          'bg-surface text-ink w-full max-w-lg rounded-2xl shadow-modal overflow-hidden max-h-[90dvh] flex flex-col',
+          className,
+        )}
       >
         {title ? (
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-slateBg shrink-0">
-            <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-            <button onClick={onClose} aria-label="Закрыть" className="text-gray-400 hover:text-gray-600 p-1">
-              <X className="w-5 h-5" />
-            </button>
+          <div className="px-6 py-4 border-b border-line flex justify-between items-center gap-3 shrink-0">
+            <h3 className="text-lg font-bold text-ink">{title}</h3>
+            <CloseButton onClick={onClose} />
           </div>
         ) : null}
-        <div className="overflow-y-auto">{children}</div>
+        <div className="overflow-y-auto overscroll-contain">{children}</div>
       </div>
     </div>
   )
 }
 
+/** На телефоне выезжает снизу (удобно большим пальцем), на компьютере — окно по центру. */
 export function BottomSheet({ open, onClose, title, children, className }: BaseProps) {
   const ref = useRef<HTMLDivElement>(null)
   useDialogBehaviour(open, onClose, ref)
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in md:p-4"
+      onClick={onClose}
+    >
       <div
         ref={ref}
         role="dialog"
@@ -116,23 +121,44 @@ export function BottomSheet({ open, onClose, title, children, className }: BaseP
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
         className={cn(
-          'bg-white w-full md:max-w-md rounded-t-2xl md:rounded-2xl shadow-modal max-h-[85vh] flex flex-col animate-sheet-up md:animate-fade-in',
+          'bg-surface text-ink w-full md:max-w-md rounded-t-3xl md:rounded-2xl shadow-modal max-h-[88dvh] flex flex-col',
+          'animate-sheet-up md:animate-fade-in',
           className,
         )}
       >
-        <div className="pt-3 pb-1 flex justify-center shrink-0">
-          <span className="h-1 w-10 rounded-full bg-gray-300" aria-hidden />
+        <div className="pt-2.5 pb-1 flex justify-center shrink-0 md:hidden">
+          <span className="h-1.5 w-10 rounded-full bg-line" aria-hidden />
         </div>
         {title ? (
-          <div className="px-4 pb-3 flex items-center justify-between shrink-0">
-            <h3 className="font-bold text-gray-900">{title}</h3>
-            <button onClick={onClose} aria-label="Закрыть" className="text-gray-400 p-1">
-              <X className="w-5 h-5" />
-            </button>
+          <div className="pl-5 pr-2 pt-1 md:pt-3 pb-2 flex items-center justify-between gap-3 shrink-0">
+            <h3 className="text-lg font-bold text-ink">{title}</h3>
+            <CloseButton onClick={onClose} />
           </div>
-        ) : null}
-        <div className="overflow-y-auto px-4 pb-6">{children}</div>
+        ) : (
+          <div className="hidden md:flex justify-end px-2 pt-2 shrink-0">
+            <CloseButton onClick={onClose} />
+          </div>
+        )}
+        <div
+          className="overflow-y-auto overscroll-contain px-5"
+          style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+        >
+          {children}
+        </div>
       </div>
     </div>
+  )
+}
+
+function CloseButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Закрыть"
+      className="w-11 h-11 -my-1 rounded-full flex items-center justify-center text-muted hover:bg-subtle hover:text-ink transition-colors shrink-0"
+    >
+      <X className="w-5 h-5" aria-hidden />
+    </button>
   )
 }

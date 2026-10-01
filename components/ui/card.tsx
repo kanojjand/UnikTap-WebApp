@@ -10,8 +10,9 @@ export function Card({
   return (
     <Tag
       className={cn(
-        'bg-white rounded-2xl p-4 shadow-card border border-gray-100',
-        interactive && 'active:scale-[0.98] transition-transform cursor-pointer motion-reduce:transform-none',
+        'bg-surface rounded-2xl p-4 shadow-card border border-line',
+        interactive &&
+          'transition-[transform,box-shadow] duration-150 active:scale-[0.99] hover:shadow-lift cursor-pointer motion-reduce:transform-none',
         className,
       )}
       {...props}

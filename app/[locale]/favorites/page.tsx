@@ -1,8 +1,9 @@
-import { BookmarkX } from 'lucide-react'
+import { Bookmark, Search } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { BottomNav } from '@/components/ui/bottom-nav'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import { CARD_GRID } from '@/components/ui/skeleton'
+import { buttonClass } from '@/components/ui/button-styles'
 import { Link } from '@/i18n/navigation'
 import { UniversityCard } from '@/components/student/university-card'
 import { getCurrentProfile, getFavorites } from '@/lib/queries/profile'
@@ -11,61 +12,68 @@ import { getSettings } from '@/lib/queries/settings'
 // Зависит от сессии пользователя — рендерим на каждый запрос
 export const dynamic = 'force-dynamic'
 
-
 export default async function FavoritesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  const t = await getTranslations('favorites')
-  const profile = await getCurrentProfile()
-  const settings = await getSettings()
+  const [t, ta, profile, settings] = await Promise.all([
+    getTranslations('favorites'),
+    getTranslations('auth'),
+    getCurrentProfile(),
+    getSettings(),
+  ])
 
   return (
-    <div className="min-h-[100dvh] pb-24 bg-slateBg">
-      <header className="bg-corpBlue px-4 pt-10 pb-6 rounded-b-2xl">
-        <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
-      </header>
+    <div className="pb-nav">
+      <PageHeader title={t('title')} />
 
-      <div className="px-4 py-6">
+      <div className="container-app">
         {!profile ? (
           <EmptyState
-            icon={<BookmarkX className="w-12 h-12" />}
+            icon={<Bookmark />}
             title={t('emptyTitle')}
             text={t('emptyGuest')}
             action={
-              <Link href="/auth/login">
-                <Button>{t('emptyGuest')}</Button>
-              </Link>
+              <>
+                <Link href="/auth/login" className={buttonClass()}>
+                  {ta('signIn')}
+                </Link>
+                <Link href="/auth/register" className={buttonClass('secondary')}>
+                  {ta('signUp')}
+                </Link>
+              </>
             }
           />
         ) : (
           <FavoritesList locale={locale} userId={profile.id} minReviews={settings.min_reviews_for_rating} />
         )}
       </div>
-
-      <BottomNav />
     </div>
   )
 }
 
-async function FavoritesList({
-  locale,
-  userId,
-  minReviews,
-}: {
-  locale: string
-  userId: string
-  minReviews: number
-}) {
+async function FavoritesList({ locale, userId, minReviews }: { locale: string; userId: string; minReviews: number }) {
   const t = await getTranslations('favorites')
   const universities = await getFavorites(userId)
 
   if (universities.length === 0) {
-    return <EmptyState icon={<BookmarkX className="w-12 h-12" />} title={t('emptyTitle')} text={t('emptyText')} />
+    return (
+      <EmptyState
+        icon={<Bookmark />}
+        title={t('emptyTitle')}
+        text={t('emptyText')}
+        action={
+          <Link href="/" className={buttonClass()}>
+            <Search className="w-5 h-5" aria-hidden />
+            {t('findUniversities')}
+          </Link>
+        }
+      />
+    )
   }
 
   return (
-    <ul className="space-y-4">
+    <ul className={CARD_GRID}>
       {universities.map((university) => (
         <UniversityCard
           key={university.id}

@@ -10,7 +10,8 @@ import { RatingInput } from '@/components/ui/rating'
 import { BottomSheet } from '@/components/ui/modal'
 import { submitReview } from '@/lib/actions/reviews'
 import { track } from '@/lib/analytics'
-import { pick } from '@/lib/utils'
+import { haptic } from '@/lib/haptics'
+import { majorName } from '@/lib/utils'
 import type { Review, UniversityMajor } from '@/types/domain'
 import { AuthWall } from './auth-wall'
 
@@ -53,8 +54,8 @@ export function ReviewForm({
 
   function submit() {
     setError('')
-    if (rating === 0) return setError(t('yourRating'))
-    if (body.trim().length < 30) return setError(t('bodyHint', { count: body.trim().length }))
+    if (rating === 0) return setError(t('errorRating'))
+    if (body.trim().length < 30) return setError(t('errorBody', { count: body.trim().length }))
 
     startTransition(async () => {
       const result = await submitReview({
@@ -84,6 +85,7 @@ export function ReviewForm({
       }
 
       track('review_submit', { rating }, { universityId })
+      haptic([10, 40, 10])
       toast.success(t('submitted'))
       setOpen(false)
     })
@@ -91,12 +93,7 @@ export function ReviewForm({
 
   return (
     <>
-      <Button
-        fullWidth
-        variant="soft"
-        onClick={() => (isGuest ? setWall(true) : setOpen(true))}
-        className="justify-center"
-      >
+      <Button variant="soft" onClick={() => (isGuest ? setWall(true) : setOpen(true))} className="w-full sm:w-auto">
         <PenLine className="w-4 h-4" aria-hidden />
         {existing ? t('edit') : t('write')}
       </Button>
@@ -104,17 +101,27 @@ export function ReviewForm({
       <BottomSheet open={open} onClose={() => setOpen(false)} title={existing ? t('edit') : t('write')}>
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-bold text-gray-700 mb-1">{t('yourRating')}</p>
-            <RatingInput value={rating} onChange={setRating} label={t('yourRating')} />
+            <p className="text-sm font-semibold text-body">
+              {t('yourRating')}{' '}
+              <span className="text-danger" aria-hidden>
+                *
+              </span>
+            </p>
+            <div className="-ml-2">
+              <RatingInput size={34} value={rating} onChange={setRating} label={t('yourRating')} />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-bold text-gray-700">{t('criteria')}</p>
+          <div>
+            <p className="text-sm font-semibold text-body mb-1">{t('criteria')}</p>
             {CRITERIA.map((key) => (
-              <div key={key} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{t(key)}</span>
+              <div
+                key={key}
+                className="flex flex-col min-[400px]:flex-row min-[400px]:items-center justify-between border-b border-line last:border-0 py-1"
+              >
+                <span className="text-[15px] text-body pt-1 min-[400px]:pt-0">{t(key)}</span>
                 <RatingInput
-                  size={20}
+                  size={22}
                   value={criteria[key]}
                   onChange={(value) => setCriteria((current) => ({ ...current, [key]: value }))}
                   label={t(key)}
@@ -144,12 +151,13 @@ export function ReviewForm({
             {({ id }) => <Textarea id={id} rows={2} value={cons} onChange={(event) => setCons(event.target.value)} />}
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label={t('studyYear')}>
               {({ id }) => (
                 <Input
                   id={id}
                   type="number"
+                  inputMode="numeric"
                   min={1990}
                   max={2100}
                   value={studyYear}
@@ -163,7 +171,7 @@ export function ReviewForm({
                   <option value="">—</option>
                   {majors.map((major) => (
                     <option key={major.id} value={major.id}>
-                      {pick(major.specialty as unknown as Record<string, unknown>, 'name', locale)}
+                      {majorName(major, locale)}
                     </option>
                   ))}
                 </Select>
@@ -171,19 +179,24 @@ export function ReviewForm({
             </Field>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-600">
+          <label className="flex items-center gap-3 min-h-[44px] text-[15px] text-body cursor-pointer">
             <input
               type="checkbox"
               checked={anonymous}
               onChange={(event) => setAnonymous(event.target.checked)}
-              className="w-4 h-4 accent-corpBlue"
+              className="w-5 h-5 accent-primary"
             />
             {t('anonymousLabel')}
           </label>
 
-          {error ? <p className="text-xs text-red-600">{error}</p> : null}
+          {error ? (
+            <p role="alert" className="text-sm text-danger bg-danger-soft rounded-xl p-3">
+              {error}
+            </p>
+          ) : null}
 
-          <div className="flex gap-2 pt-2">
+          {/* Кнопки прилипают к низу шторки — не нужно листать, чтобы отправить */}
+          <div className="flex gap-2 pt-3 pb-1 sticky bottom-0 bg-surface">
             <Button variant="secondary" fullWidth onClick={() => setOpen(false)}>
               {tc('cancel')}
             </Button>

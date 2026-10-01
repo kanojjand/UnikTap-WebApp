@@ -20,7 +20,7 @@ export function Accordion({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className={cn('border border-gray-100 rounded-xl overflow-hidden bg-white', className)}>
+    <div className={cn('border border-line rounded-2xl overflow-hidden bg-surface', className)}>
       <button
         type="button"
         aria-expanded={open}
@@ -28,15 +28,15 @@ export function Accordion({
           if (!open) onOpen?.()
           setOpen((value) => !value)
         }}
-        className="w-full p-4 bg-white flex justify-between items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-corpBlue"
+        className="w-full p-4 min-h-[56px] flex justify-between items-center gap-3 text-left hover:bg-subtle/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
       >
-        <span className="flex-1">{header}</span>
+        <span className="flex-1 min-w-0">{header}</span>
         <ChevronDown
-          className={cn('w-5 h-5 text-gray-400 transition-transform shrink-0', open && 'rotate-180')}
+          className={cn('w-5 h-5 text-muted transition-transform shrink-0', open && 'rotate-180')}
           aria-hidden
         />
       </button>
-      {open ? <div className="px-4 pb-4 bg-slateBg pt-2 border-t border-gray-50">{children}</div> : null}
+      {open ? <div className="px-4 pb-4 pt-3 border-t border-line animate-fade-in">{children}</div> : null}
     </div>
   )
 }

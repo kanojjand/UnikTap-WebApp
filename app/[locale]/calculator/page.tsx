@@ -1,11 +1,11 @@
 import Image from 'next/image'
-import { Calculator, Info } from 'lucide-react'
+import { Calculator, Info, PartyPopper } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
-import { BottomNav } from '@/components/ui/bottom-nav'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { PageHeader } from '@/components/ui/page-header'
+import { buttonClass } from '@/components/ui/button-styles'
 import { ScoreInput } from '@/components/student/score-input'
 import { CalculatorTabs } from '@/components/student/calculator-tabs'
 import { ShareButton } from '@/components/student/share-button'
@@ -14,11 +14,10 @@ import { getEntSubjects } from '@/lib/queries/dictionaries'
 import { getSettings } from '@/lib/queries/settings'
 import { getCurrentProfile } from '@/lib/queries/profile'
 import { rankMajorsByChance, type Chance } from '@/lib/ent'
-import { formatMoney, pick } from '@/lib/utils'
+import { cn, formatMoney, majorName, pick } from '@/lib/utils'
 
 // Зависит от сессии пользователя — рендерим на каждый запрос
 export const dynamic = 'force-dynamic'
-
 
 export default async function CalculatorPage({
   params,
@@ -41,43 +40,43 @@ export default async function CalculatorPage({
 
   const score = Number(single('score')) || profile?.ent_score || 0
   const tab = single('tab') === 'chances' ? 'chances' : 'score'
+  const subject1 = Number(single('s1')) || profile?.ent_subject_1_id || null
+  const subject2 = Number(single('s2')) || profile?.ent_subject_2_id || null
 
   return (
-    <div className="min-h-[100dvh] pb-24 bg-slateBg">
-      <header className="bg-corpBlue px-4 pt-10 pb-6 rounded-b-2xl flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
-        <ShareButton title={t('shareResult')} className="text-white/80" />
-      </header>
+    <div className="pb-nav">
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        action={
+          tab === 'chances' && score ? (
+            <ShareButton title={t('shareResult')} className="rounded-full text-muted hover:text-ink hover:bg-subtle" />
+          ) : null
+        }
+      />
 
-      <div className="pt-4">
+      <div className="container-app max-w-3xl md:max-w-4xl">
         <CalculatorTabs />
-      </div>
 
-      <div className="px-4">
-        {tab === 'score' ? (
-          <ScoreInput
-            subjects={subjects}
-            settings={settings}
-            isGuest={!profile}
-            locale={locale}
-            initial={{
-              score: score || null,
-              subject1: Number(single('s1')) || profile?.ent_subject_1_id || null,
-              subject2: Number(single('s2')) || profile?.ent_subject_2_id || null,
-              details: profile?.ent_details ?? {},
-            }}
-          />
-        ) : (
-          <Chances
-            score={score}
-            locale={locale}
-            subject1={Number(single('s1')) || profile?.ent_subject_1_id || null}
-            subject2={Number(single('s2')) || profile?.ent_subject_2_id || null}
-          />
-        )}
+        <div className="pt-5">
+          {tab === 'score' ? (
+            <ScoreInput
+              subjects={subjects}
+              settings={settings}
+              isGuest={!profile}
+              locale={locale}
+              initial={{
+                score: score || null,
+                subject1,
+                subject2,
+                details: profile?.ent_details ?? {},
+              }}
+            />
+          ) : (
+            <Chances score={score} locale={locale} subject1={subject1} subject2={subject2} />
+          )}
+        </div>
       </div>
-
-      <BottomNav />
     </div>
   )
 }
@@ -104,23 +103,49 @@ async function Chances({
 
   if (!score) {
     return (
-      <EmptyState icon={<Calculator className="w-12 h-12" />} title={t('emptyTitle')} text={t('emptyText')} />
+      <EmptyState
+        icon={<Calculator />}
+        title={t('emptyTitle')}
+        text={t('emptyText')}
+        action={
+          <Link href="/calculator" className={buttonClass()}>
+            {t('tabScore')}
+          </Link>
+        }
+      />
     )
   }
 
   const [settings, majors] = await Promise.all([getSettings(), getAllMajors()])
   const rows = rankMajorsByChance(majors, score, settings, [subject1, subject2])
   const belowThreshold = rows.filter((row) => row.chance === 'below_threshold')
+  const highCount = rows.filter((row) => row.chance === 'high').length
 
   return (
-    <div className="space-y-6">
-      <Card className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">{t('yourScoreShort')}</span>
-        <span className="text-2xl font-bold text-corpBlue">{score}</span>
-      </Card>
+    <div className="space-y-8">
+      <div className="rounded-2xl bg-primary-soft p-4 md:p-5 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm text-muted">{t('yourScoreShort')}</p>
+          <p className="text-3xl font-bold text-primary-ink leading-tight">{score}</p>
+        </div>
+        <Link
+          href={`/calculator?score=${score}`}
+          className="min-h-[44px] px-4 rounded-xl bg-surface text-ink text-sm font-semibold inline-flex items-center border border-line hover:bg-subtle"
+        >
+          {t('changeScore')}
+        </Link>
+      </div>
+
+      {/* Маленький праздник, если есть хорошие варианты */}
+      {highCount > 0 ? (
+        <p className="flex items-start gap-3 rounded-2xl bg-success-soft text-success p-4 font-medium" role="status">
+          <PartyPopper className="w-5 h-5 shrink-0 mt-0.5" aria-hidden />
+          {t('celebrate', { count: highCount })}
+        </p>
+      ) : null}
 
       {belowThreshold.length > 0 && belowThreshold.length === rows.length ? (
-        <p className="text-sm bg-red-50 text-red-700 rounded-xl p-4">
+        <p className="text-[15px] bg-danger-soft text-danger rounded-2xl p-4" role="alert">
           {t('thresholdWarning', { threshold: belowThreshold[0].threshold })}
         </p>
       ) : null}
@@ -130,51 +155,58 @@ async function Chances({
         if (items.length === 0) return null
 
         return (
-          <section key={group.key}>
-            <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <section key={group.key} aria-labelledby={`group-${group.key}`}>
+            <h2 id={`group-${group.key}`} className="font-bold text-ink mb-3 flex items-center gap-2">
               <Badge tone={group.tone}>{t(group.key)}</Badge>
-              <span className="text-xs text-gray-400">{items.length}</span>
+              <span className="text-sm text-muted font-medium">{items.length}</span>
             </h2>
-            <ul className="space-y-2">
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {items.slice(0, 40).map(({ major, diff, subjectsMatch }) => (
                 <li key={major.id}>
                   <Link
                     href={`/universities/${major.university?.slug ?? ''}?tab=majors`}
-                    className="block bg-white rounded-2xl border border-gray-100 p-4 shadow-card"
+                    className="flex gap-3 h-full bg-surface rounded-2xl border border-line p-4 shadow-card hover:shadow-lift transition-shadow"
                   >
-                    <p className="font-bold text-sm text-gray-900 leading-tight flex items-center gap-2">
+                    <span className="relative w-10 h-10 shrink-0 rounded-lg border border-line bg-white overflow-hidden flex items-center justify-center">
                       {major.university?.logo_url ? (
-                        <span className="relative w-7 h-7 shrink-0 rounded-md border border-gray-100 bg-white overflow-hidden">
-                          <Image
-                            src={major.university.logo_url}
-                            alt=""
-                            fill
-                            sizes="28px"
-                            className="object-contain p-0.5"
-                          />
+                        <Image
+                          src={major.university.logo_url}
+                          alt=""
+                          fill
+                          sizes="40px"
+                          className="object-contain p-1"
+                        />
+                      ) : (
+                        <span className="text-sm font-bold text-slate-400" aria-hidden>
+                          {pick(major.university as unknown as Record<string, unknown>, 'name', locale).slice(0, 1)}
                         </span>
-                      ) : null}
-                      {pick(major.university as unknown as Record<string, unknown>, 'name', locale)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      <span className="font-mono text-gray-400">{major.specialty?.code}</span>{' '}
-                      {pick(major.specialty as unknown as Record<string, unknown>, 'name', locale)}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-2 text-[11px]">
-                      <span className="text-gray-500">
-                        {t('needed')}: <b className="text-gray-800">{major.grant_score ?? '—'}</b>
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold text-[15px] text-ink leading-snug">
+                        {majorName(major, locale)}
                       </span>
-                      {diff !== null ? (
-                        <span className={diff >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          {t('diff')}: {diff > 0 ? '+' : ''}
-                          {diff}
+                      <span className="block text-sm text-muted mt-0.5 truncate">
+                        {pick(major.university as unknown as Record<string, unknown>, 'name', locale)}
+                      </span>
+                      <span className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-sm">
+                        <span className="text-muted">
+                          {t('needed')}: <b className="text-ink">{major.grant_score ?? '—'}</b>
                         </span>
-                      ) : null}
-                      <span className="text-gray-500">
-                        {tu('feePerYear')}: <b className="text-gray-800">{formatMoney(major.fee_per_year, locale)}</b>
+                        {diff !== null ? (
+                          <span className={cn('font-semibold', diff >= 0 ? 'text-success' : 'text-danger')}>
+                            {diff > 0 ? '+' : ''}
+                            {diff}
+                          </span>
+                        ) : null}
+                        <span className="text-muted">
+                          {tu('feePerYear')}: <b className="text-ink">{formatMoney(major.fee_per_year, locale)}</b>
+                        </span>
                       </span>
-                      {!subjectsMatch ? <span className="text-gray-400">≠ профильные</span> : null}
-                    </div>
+                      {!subjectsMatch ? (
+                        <span className="block text-sm text-muted mt-1">{t('otherSubjects')}</span>
+                      ) : null}
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -183,8 +215,8 @@ async function Chances({
         )
       })}
 
-      <p className="text-xs text-gray-500 bg-white rounded-xl p-4 flex gap-2 items-start">
-        <Info className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" aria-hidden />
+      <p className="text-sm text-muted bg-surface border border-line rounded-2xl p-4 flex gap-3 items-start">
+        <Info className="w-5 h-5 shrink-0 text-muted" aria-hidden />
         {t('disclaimer')}
       </p>
     </div>

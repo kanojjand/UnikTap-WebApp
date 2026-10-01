@@ -24,7 +24,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="flex min-h-screen bg-slateBg">
+    // Админка всегда в светлой теме: её таблицы и формы свёрстаны под светлый фон
+    <div className="theme-light flex min-h-screen bg-slateBg text-gray-900">
       <AdminSidebar name={profile.full_name ?? ''} email={profile.email ?? ''} pendingReviews={pending} />
       <main className="flex-1 overflow-x-hidden p-6 lg:p-10">
         <div className="max-w-6xl mx-auto">{children}</div>

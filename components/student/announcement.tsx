@@ -7,21 +7,28 @@ export function Announcement({ announcement, locale }: { announcement: AppSettin
   if (!text) return null
 
   const content = (
-    <span className="flex items-start gap-2">
-      <Megaphone className="w-4 h-4 shrink-0 mt-0.5" aria-hidden />
-      {text}
+    <span className="flex items-start gap-3">
+      <Megaphone className="w-5 h-5 shrink-0 mt-0.5" aria-hidden />
+      <span>{text}</span>
     </span>
   )
 
   return (
-    <div className="mx-4 mt-4 rounded-2xl bg-softBlue text-corpBlue text-sm p-4 font-medium">
-      {announcement.link ? (
-        <a href={announcement.link} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
-          {content}
-        </a>
-      ) : (
-        content
-      )}
+    <div className="container-app mt-3">
+      <div className="rounded-2xl border border-line bg-surface text-body text-[15px] p-4">
+        {announcement.link ? (
+          <a
+            href={announcement.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block underline-offset-4 hover:underline text-primary-ink font-medium"
+          >
+            {content}
+          </a>
+        ) : (
+          content
+        )}
+      </div>
     </div>
   )
 }

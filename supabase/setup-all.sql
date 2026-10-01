@@ -1,5 +1,5 @@
 -- ============================================================
--- UnikTap · всё одним файлом: миграции 0001–0010 + сид.
+-- UnikTap · всё одним файлом: миграции 0001–0011 + сид.
 -- Вставьте целиком в Supabase → SQL Editor и нажмите Run.
 -- Скрипт безопасно запускать повторно.
 -- ============================================================
@@ -746,6 +746,34 @@ create policy "avatar owner write" on storage.objects for all to authenticated
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text)
   with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 
+-- ─────────── migrations/0011_programs_campuses.sql ───────────
+-- 0011 — образовательные программы вуза, факультеты и корпуса
+--
+-- specialties — это группы ОП (B001…): от группы берутся профильные предметы ЕНТ.
+-- Внутри одной группы у вуза бывает несколько программ со своими кодами (6B01101…)
+-- и названиями, поэтому код и название программы хранятся в university_majors.
+-- Пустые program_code/program_name — старые записи: для них показывается название группы.
+
+alter table public.university_majors
+  add column if not exists program_code    text not null default '',
+  add column if not exists program_name_ru text not null default '',
+  add column if not exists program_name_kk text not null default '';
+
+-- Стоимость может быть неизвестна: 0 значит «бесплатно», поэтому нужен null
+alter table public.university_majors alter column fee_per_year drop not null;
+
+alter table public.university_majors
+  drop constraint if exists university_majors_university_id_specialty_id_degree_key;
+
+create unique index if not exists university_majors_program_key
+  on public.university_majors (university_id, specialty_id, degree, program_code, program_name_ru);
+
+-- faculties: [{ name_ru, name_kk }]
+-- campuses:  [{ title_ru, title_kk, address_ru, address_kk, twogis_url }]
+alter table public.universities
+  add column if not exists faculties jsonb not null default '[]',
+  add column if not exists campuses  jsonb not null default '[]';
+
 -- ─────────── seed.sql ───────────
 -- ============================================================
 -- UnikTap · стартовые данные. Скрипт повторно запускаемый.
@@ -1017,7 +1045,7 @@ from (values
 ) as v(uslug, scode, forms, langs, years, fee, grant_score, paid_score, grants_total, descr, ord)
 join public.universities u on u.slug = v.uslug
 join public.specialties s on s.code = v.scode
-on conflict (university_id, specialty_id, degree) do nothing;
+on conflict do nothing;
 
 -- ── История проходных баллов (3 года) ─────────────────────────────────
 insert into public.major_score_history (university_major_id, year, grant_score, paid_min_score, grants_count, applicants_count)

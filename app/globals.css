@@ -2,32 +2,129 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Палитра. Правило «визуальной тишины»: нейтральные + один акцент (primary)
+ * + статусные цвета только для шансов и ошибок.
+ * Все пары текст/фон проверены на контраст ≥ 4.5:1 (видно на солнце).
+ *
+ * Тему выбирает пользователь (светлая, тёмная, как в системе) — lib/theme.ts
+ * ставит на <html> класс theme-light или theme-dark до первой отрисовки.
+ * Админка обёрнута в .theme-light и всегда светлая.
+ */
 @layer base {
-  :root {
+  :root,
+  .theme-light {
     color-scheme: light;
+    --canvas: 245 247 250;
+    --surface: 255 255 255;
+    --subtle: 241 245 249;
+    --line: 226 232 240;
+    --ink: 15 23 42;
+    --body: 51 65 85;
+    --muted: 88 101 122;
+    --primary: 30 58 138;
+    --primary-hover: 30 64 175;
+    --primary-ink: 30 58 138;
+    --primary-soft: 234 241 254;
+    --success: 22 101 52;
+    --success-soft: 220 252 231;
+    --warning: 133 77 14;
+    --warning-soft: 254 249 195;
+    --danger: 185 28 28;
+    --danger-soft: 254 226 226;
+    --danger-solid: 220 38 38;
+  }
+
+  .theme-dark {
+    color-scheme: dark;
+    --canvas: 11 18 32;
+    --surface: 19 28 46;
+    --subtle: 28 39 64;
+    --line: 38 50 74;
+    --ink: 241 245 249;
+    --body: 203 213 225;
+    --muted: 148 163 184;
+    --primary: 53 99 233;
+    --primary-hover: 41 82 211;
+    --primary-ink: 157 185 255;
+    --primary-soft: 26 39 72;
+    --success: 110 231 160;
+    --success-soft: 15 42 28;
+    --warning: 252 211 77;
+    --warning-soft: 46 37 8;
+    --danger: 252 165 165;
+    --danger-soft: 58 21 24;
+    --danger-solid: 220 38 38;
   }
 
   html {
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-slateBg text-gray-900 font-sans antialiased;
+    @apply bg-canvas text-ink font-sans antialiased;
+    /* Страховка: случайно длинная строка не должна «отдалять» страницу на телефоне.
+       clip, а не hidden — иначе перестанут работать sticky-элементы */
+    overflow-x: clip;
   }
 
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  /* Единый заметный фокус для клавиатуры */
+  :focus-visible {
+    outline: 2px solid rgb(var(--primary));
+    outline-offset: 2px;
   }
-  ::-webkit-scrollbar-track {
-    background: transparent;
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
-  ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
+  input[type='number'] {
+    -moz-appearance: textfield;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+
+  @media (hover: hover) {
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgb(var(--line));
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgb(var(--muted));
+    }
+  }
+}
+
+@layer components {
+  /* Общая ширина контента: на телефоне — вся ширина, на компьютере — до 1152px */
+  .container-app {
+    @apply mx-auto w-full max-w-6xl px-4 md:px-6;
+  }
+  /* Отступ снизу под нижнюю навигацию на телефоне */
+  .pb-nav {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 768px) {
+    .pb-nav {
+      padding-bottom: 3rem;
+    }
+  }
+  /* Отступ сверху с учётом «чёлки» телефона */
+  .pt-safe {
+    padding-top: max(1.25rem, calc(env(safe-area-inset-top) + 0.5rem));
+  }
+  @media (min-width: 768px) {
+    .pt-safe {
+      padding-top: 2rem;
+    }
   }
 }
 
@@ -39,13 +136,37 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  /* Мобильное приложение остаётся «телефоном по центру» на широком экране */
-  .app-shell {
-    @apply md:max-w-md md:mx-auto md:border-x md:border-gray-300 md:min-h-screen bg-slateBg;
+  .select-chevron {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
   }
   .prose-content {
-    @apply text-sm leading-relaxed text-gray-600 max-w-prose whitespace-pre-line;
+    @apply text-[15px] leading-relaxed text-body max-w-prose whitespace-pre-line;
   }
+  /* Логотип: синий на светлой теме, белый на тёмной */
+  .logo-dark {
+    display: none;
+  }
+  .theme-dark .logo-light {
+    display: none;
+  }
+  .theme-dark .logo-dark {
+    display: block;
+  }
+}
+
+/* Кнопки масштаба карты — под палец, а не 30px по умолчанию */
+.leaflet-touch .leaflet-bar a,
+.leaflet-bar a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 20px;
+}
+.leaflet-touch .leaflet-bar {
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -7,21 +7,19 @@ import { ScoreCard } from '@/components/student/score-card'
 import { Announcement } from '@/components/student/announcement'
 import { UniversityCard } from '@/components/student/university-card'
 import { LoadMore } from '@/components/student/load-more'
-import { BottomNav } from '@/components/ui/bottom-nav'
 import { EmptyState } from '@/components/ui/empty-state'
-import { ListSkeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
+import { CARD_GRID, ListSkeleton, Skeleton } from '@/components/ui/skeleton'
+import { buttonClass } from '@/components/ui/button-styles'
 import { Link } from '@/i18n/navigation'
 import { getCities, getSpecialties } from '@/lib/queries/dictionaries'
 import { getSettings } from '@/lib/queries/settings'
 import { getUniversities, PAGE_SIZE } from '@/lib/queries/universities'
 import { getCurrentProfile, getFavoriteIds } from '@/lib/queries/profile'
 import { getChance, getThreshold, resolveThresholdCategory } from '@/lib/ent'
-import type { CatalogFilters as Filters, StudyForm, UniversityType } from '@/types/domain'
+import type { AppSettings, CatalogFilters as Filters, Profile, StudyForm, UniversityType } from '@/types/domain'
 
 // Зависит от сессии пользователя — рендерим на каждый запрос
 export const dynamic = 'force-dynamic'
-
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
@@ -66,27 +64,42 @@ export default async function CatalogPage({
     page,
   }
 
+  // Ключ Suspense без номера страницы: «Показать ещё» дописывает список, а не мигает скелетоном
+  const resultsKey = JSON.stringify({ ...filters, page: undefined })
+
   return (
-    <div className="pb-24 min-h-[100dvh] bg-slateBg">
-      <Suspense fallback={<div className="h-40 bg-corpBlue rounded-b-2xl" />}>
-        <CatalogHeader cities={cities} locale={locale} />
+    <div className="pb-nav">
+      <Suspense fallback={<HeaderFallback />}>
+        <CatalogHeader />
       </Suspense>
 
       <Announcement announcement={settings.announcement} locale={locale} />
 
-      <div className="px-4 py-6">
-        <ScoreCard savedScore={profile?.ent_score ?? null} />
+      <div className="container-app mt-5 lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-8 lg:items-start">
+        <aside className="mb-6 lg:mb-0 lg:sticky lg:top-24">
+          <ScoreCard savedScore={profile?.ent_score ?? null} />
+        </aside>
 
-        <Suspense fallback={<div className="h-16" />}>
-          <CatalogFilters specialties={specialties} locale={locale} />
-        </Suspense>
+        <section aria-label="Университеты">
+          <Suspense fallback={<div className="h-28" />}>
+            <CatalogFilters specialties={specialties} cities={cities} locale={locale} />
+          </Suspense>
 
-        <Suspense key={JSON.stringify(query)} fallback={<ListSkeleton />}>
-          <CatalogResults filters={filters} locale={locale} score={score} page={page} minReviews={settings.min_reviews_for_rating} />
-        </Suspense>
+          <Suspense key={resultsKey} fallback={<ListSkeleton count={6} />}>
+            <CatalogResults filters={filters} locale={locale} score={score} settings={settings} profile={profile} />
+          </Suspense>
+        </section>
       </div>
+    </div>
+  )
+}
 
-      <BottomNav />
+function HeaderFallback() {
+  return (
+    <div className="container-app pt-safe pb-2 space-y-3">
+      <Skeleton className="h-9 w-64" />
+      <Skeleton className="h-5 w-80 max-w-full" />
+      <Skeleton className="h-14 max-w-2xl rounded-2xl" />
     </div>
   )
 }
@@ -95,39 +108,35 @@ async function CatalogResults({
   filters,
   locale,
   score,
-  page,
-  minReviews,
+  settings,
+  profile,
 }: {
   filters: Filters
   locale: string
   score: number
-  page: number
-  minReviews: number
+  settings: AppSettings
+  profile: Profile | null
 }) {
   const t = await getTranslations('catalog')
-  const settings = await getSettings()
-  const profile = await getCurrentProfile()
-  const favorites = profile ? await getFavoriteIds(profile.id) : new Set<string>()
 
-  let items: Awaited<ReturnType<typeof getUniversities>>['items'] = []
-  let total = 0
-  try {
-    const result = await getUniversities(filters)
-    items = result.items
-    total = result.total
-  } catch (error) {
-    console.error('catalog query failed', error)
-  }
+  // Избранное и каталог грузим параллельно, а не друг за другом
+  const [favorites, { items, total }] = await Promise.all([
+    profile ? getFavoriteIds(profile.id) : new Set<string>(),
+    getUniversities(filters).catch((error) => {
+      console.error('catalog query failed', error)
+      return { items: [], total: 0 }
+    }),
+  ])
 
   if (items.length === 0) {
     return (
       <EmptyState
-        icon={<SearchX className="w-12 h-12" />}
+        icon={<SearchX />}
         title={t('emptyTitle')}
         text={t('emptyText')}
         action={
-          <Link href="/">
-            <Button variant="secondary">{t('resetFilters')}</Button>
+          <Link href="/" className={buttonClass('secondary')}>
+            {t('resetFilters')}
           </Link>
         }
       />
@@ -136,18 +145,17 @@ async function CatalogResults({
 
   return (
     <>
-      <h2 className="font-bold text-gray-800 mb-4">{t('found', { count: total })}</h2>
-      <ul className="space-y-4">
-        {items.map((university) => {
+      <p className="text-sm font-medium text-muted mb-3" role="status">
+        {t('found', { count: total })}
+      </p>
+      <ul className={CARD_GRID}>
+        {items.map((university, index) => {
           const chance =
             score > 0
               ? getChance(
                   score,
                   university.min_ent_score,
-                  getThreshold(
-                    settings.ent_thresholds,
-                    resolveThresholdCategory({ universityType: university.type }),
-                  ),
+                  getThreshold(settings.ent_thresholds, resolveThresholdCategory({ universityType: university.type })),
                   settings.chance_bands,
                 )
               : undefined
@@ -160,12 +168,13 @@ async function CatalogResults({
               chance={chance}
               isFavorite={favorites.has(university.id)}
               isGuest={!profile}
-              minReviews={minReviews}
+              minReviews={settings.min_reviews_for_rating}
+              priority={index < 4}
             />
           )
         })}
       </ul>
-      <LoadMore page={page} hasMore={items.length < total && items.length >= PAGE_SIZE} />
+      <LoadMore page={filters.page ?? 1} hasMore={items.length < total && items.length >= PAGE_SIZE} />
     </>
   )
 }

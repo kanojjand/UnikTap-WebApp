@@ -52,17 +52,26 @@ export function InstallPrompt() {
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-24 inset-x-4 md:left-1/2 md:-translate-x-1/2 md:w-96 z-40 bg-white rounded-2xl shadow-modal border border-gray-100 p-4">
+    <div
+      className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] md:bottom-6 inset-x-3 md:left-auto md:right-6 md:w-96 z-40 bg-surface rounded-2xl shadow-modal border border-line p-4 animate-fade-in"
+      role="dialog"
+      aria-label={t('install')}
+    >
       <div className="flex items-start gap-3">
-        <div className="bg-softBlue text-corpBlue rounded-xl p-2">
+        <div className="bg-primary-soft text-primary-ink rounded-xl p-2">
           <Download className="w-5 h-5" aria-hidden />
         </div>
         <div className="flex-1">
-          <p className="font-bold text-sm text-gray-900">{t('install')}</p>
-          <p className="text-xs text-gray-500 mt-1">{t('installHint')}</p>
+          <p className="font-semibold text-[15px] text-ink">{t('install')}</p>
+          <p className="text-sm text-muted mt-0.5">{t('installHint')}</p>
         </div>
-        <button onClick={() => snooze()} aria-label={t('close')} className="text-gray-400">
-          <X className="w-4 h-4" />
+        <button
+          type="button"
+          onClick={() => snooze()}
+          aria-label={t('close')}
+          className="w-11 h-11 -mr-2 -mt-2 rounded-full flex items-center justify-center text-muted hover:bg-subtle shrink-0"
+        >
+          <X className="w-5 h-5" aria-hidden />
         </button>
       </div>
       <div className="flex gap-2 mt-3">

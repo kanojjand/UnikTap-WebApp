@@ -54,20 +54,28 @@ export function OnboardingWizard({
   }
 
   return (
-    <div className="min-h-[100dvh] bg-white px-4 pt-10 pb-10 flex flex-col max-w-md mx-auto">
-      <div className="flex gap-2 justify-center mb-8" aria-label={t('step', { current: step, total: TOTAL })}>
+    <div className="min-h-[100dvh] px-4 pt-safe flex flex-col max-w-md mx-auto md:justify-center">
+      <div
+        className="flex gap-2 justify-center mb-8 mt-4"
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={TOTAL}
+        aria-valuenow={step}
+        aria-label={t('step', { current: step, total: TOTAL })}
+      >
         {Array.from({ length: TOTAL }).map((_, index) => (
           <span
             key={index}
-            className={cn('h-2 rounded-full transition-all', index + 1 === step ? 'w-8 bg-corpBlue' : 'w-2 bg-gray-200')}
+            className={cn('h-2 rounded-full transition-all', index + 1 === step ? 'w-8 bg-primary' : 'w-2 bg-line')}
           />
         ))}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 md:flex-none">
+        <p className="text-sm font-medium text-muted mb-2">{t('step', { current: step, total: TOTAL })}</p>
         {step === 1 ? (
           <>
-            <h1 className="text-2xl font-bold mb-6">{t('cityTitle')}</h1>
+            <h1 className="text-[26px] font-bold tracking-tight text-ink mb-6">{t('cityTitle')}</h1>
             <Select value={cityId} onChange={(event) => setCityId(event.target.value)} aria-label={t('cityTitle')}>
               <option value="">{t('cityAny')}</option>
               {cities.map((city) => (
@@ -81,13 +89,14 @@ export function OnboardingWizard({
 
         {step === 2 ? (
           <>
-            <h1 className="text-2xl font-bold mb-6">{t('scoreTitle')}</h1>
+            <h1 className="text-[26px] font-bold tracking-tight text-ink mb-6">{t('scoreTitle')}</h1>
             <div className="space-y-3">
               <Field label={t('scoreTitle')} hint={t('scoreLater')}>
                 {({ id }) => (
                   <Input
                     id={id}
                     type="number"
+                    inputMode="numeric"
                     min={0}
                     max={140}
                     value={score}
@@ -95,8 +104,12 @@ export function OnboardingWizard({
                   />
                 )}
               </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Select value={subject1} onChange={(event) => setSubject1(event.target.value)} aria-label={t('subjectsTitle')}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Select
+                  value={subject1}
+                  onChange={(event) => setSubject1(event.target.value)}
+                  aria-label={t('subjectsTitle')}
+                >
                   <option value="">{t('subjectsTitle')} 1</option>
                   {subjects.map((subject) => (
                     <option key={subject.id} value={subject.id}>
@@ -104,7 +117,11 @@ export function OnboardingWizard({
                     </option>
                   ))}
                 </Select>
-                <Select value={subject2} onChange={(event) => setSubject2(event.target.value)} aria-label={t('subjectsTitle')}>
+                <Select
+                  value={subject2}
+                  onChange={(event) => setSubject2(event.target.value)}
+                  aria-label={t('subjectsTitle')}
+                >
                   <option value="">{t('subjectsTitle')} 2</option>
                   {subjects.map((subject) => (
                     <option key={subject.id} value={subject.id}>
@@ -119,8 +136,8 @@ export function OnboardingWizard({
 
         {step === 3 ? (
           <>
-            <h1 className="text-2xl font-bold mb-2">{t('directionsTitle')}</h1>
-            <p className="text-sm text-gray-500 mb-4">{t('directionsHint')}</p>
+            <h1 className="text-[26px] font-bold tracking-tight text-ink mb-2">{t('directionsTitle')}</h1>
+            <p className="text-sm text-muted mb-4">{t('directionsHint')}</p>
             <div className="flex flex-wrap gap-2">
               {directions.map((direction) => (
                 <Chip
@@ -144,16 +161,20 @@ export function OnboardingWizard({
         ) : null}
       </div>
 
-      <div className="space-y-2 pt-8">
-        <Button
-          fullWidth
-          loading={pending}
-          onClick={() => (step < TOTAL ? setStep(step + 1) : finish())}
-        >
+      <div
+        className="space-y-2 pt-8 sticky bottom-0 bg-canvas md:static"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <Button fullWidth size="lg" loading={pending} onClick={() => (step < TOTAL ? setStep(step + 1) : finish())}>
           {step < TOTAL ? t('next') : t('finish')}
         </Button>
+        {step > 1 ? (
+          <Button variant="secondary" fullWidth onClick={() => setStep(step - 1)} disabled={pending}>
+            {tc('back')}
+          </Button>
+        ) : null}
         <Button variant="ghost" fullWidth onClick={finish} disabled={pending}>
-          {tc('appName') ? t('skip') : t('skip')}
+          {t('skip')}
         </Button>
       </div>
     </div>

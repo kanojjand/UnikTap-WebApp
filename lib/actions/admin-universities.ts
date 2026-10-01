@@ -280,6 +280,8 @@ export async function importMajorsCsv(
       const payload = {
         university_id: university.id,
         specialty_id: specialty.id,
+        program_code: (row.program_code ?? '').trim(),
+        program_name_ru: (row.program_name_ru ?? '').trim(),
         degree: (row.degree || 'bachelor') as 'bachelor',
         fee_per_year: row.fee_per_year ? Number(row.fee_per_year) : null,
         grant_score: row.grant_score ? Number(row.grant_score) : null,
@@ -295,6 +297,8 @@ export async function importMajorsCsv(
         .eq('university_id', university.id)
         .eq('specialty_id', specialty.id)
         .eq('degree', payload.degree)
+        .eq('program_code', payload.program_code)
+        .eq('program_name_ru', payload.program_name_ru)
         .maybeSingle()
 
       if (!apply) {

@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 
+/** Пустой экран: мягкая иконка в круге, понятный заголовок и одно действие. */
 export function EmptyState({
   icon,
   title,
@@ -14,11 +15,15 @@ export function EmptyState({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-col items-center text-center py-10 px-4', className)}>
-      {icon ? <div className="text-gray-300 mb-3">{icon}</div> : null}
-      <h3 className="font-bold text-gray-700">{title}</h3>
-      {text ? <p className="text-sm text-gray-500 mt-1 max-w-prose">{text}</p> : null}
-      {action ? <div className="mt-4">{action}</div> : null}
+    <div className={cn('flex flex-col items-center text-center py-12 px-4', className)}>
+      {icon ? (
+        <div className="w-20 h-20 rounded-full bg-primary-soft text-primary-ink flex items-center justify-center mb-4 [&_svg]:w-9 [&_svg]:h-9">
+          {icon}
+        </div>
+      ) : null}
+      <h3 className="text-lg font-bold text-ink">{title}</h3>
+      {text ? <p className="text-[15px] text-muted mt-1.5 max-w-sm leading-relaxed">{text}</p> : null}
+      {action ? <div className="mt-6 flex flex-wrap justify-center gap-3">{action}</div> : null}
     </div>
   )
 }

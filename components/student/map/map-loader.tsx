@@ -7,7 +7,7 @@ import type { City } from '@/types/domain'
 
 const UniversityMap = dynamic(() => import('./university-map').then((mod) => mod.UniversityMap), {
   ssr: false,
-  loading: () => <Skeleton className="h-[calc(100dvh-160px)] w-full rounded-none" />,
+  loading: () => <Skeleton className="h-full w-full rounded-none md:rounded-2xl" />,
 })
 
 /** Leaflet грузится только на странице карты (раздел 13). */

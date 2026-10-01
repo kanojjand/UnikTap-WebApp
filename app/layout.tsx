@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import { getLocale } from 'next-intl/server'
 import { inter } from './fonts'
 import { Analytics } from '@vercel/analytics/next'
-import { Toaster } from 'sonner'
 import { ServiceWorkerRegister } from '@/components/student/sw-register'
+import { AppToaster } from '@/components/ui/app-toaster'
+import { THEME_SCRIPT } from '@/lib/theme'
 import './globals.css'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
@@ -26,7 +27,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#1E3A8A',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F5F7FA' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B1220' },
+  ],
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
@@ -36,10 +40,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale()
 
   return (
-    <html lang={locale} className={inter.variable}>
-      <body className="bg-[#E2E8F0] md:bg-[#E2E8F0]">
+    // Класс темы ставит THEME_SCRIPT до гидратации — поэтому suppressHydrationWarning
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body>
         {children}
-        <Toaster position="top-center" richColors closeButton />
+        <AppToaster />
         <ServiceWorkerRegister />
         <Analytics />
       </body>

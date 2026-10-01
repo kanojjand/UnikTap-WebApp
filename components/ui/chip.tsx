@@ -11,10 +11,14 @@ export function Chip({
   return (
     <button
       type="button"
+      aria-pressed={active}
       className={cn(
-        'shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[36px]',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-corpBlue',
-        active ? 'bg-corpBlue text-white' : 'bg-white text-gray-600 border border-gray-200',
+        'shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 text-sm font-medium whitespace-nowrap min-h-[44px]',
+        'transition-colors active:scale-[0.97] motion-reduce:transform-none',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        active
+          ? 'bg-primary text-white border border-primary'
+          : 'bg-surface text-body border border-line hover:border-muted/50',
         className,
       )}
       {...props}

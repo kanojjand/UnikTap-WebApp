@@ -22,7 +22,10 @@ export function OfflineBanner() {
   if (!offline) return null
 
   return (
-    <div className="sticky top-0 z-50 bg-yellow-100 text-yellow-800 text-xs font-medium px-4 py-2 flex items-center gap-2">
+    <div
+      role="status"
+      className="sticky top-0 z-50 bg-warning-soft text-warning text-sm font-medium px-4 py-2.5 flex items-center justify-center gap-2"
+    >
       <WifiOff className="w-4 h-4" aria-hidden />
       {t('offline')}
     </div>

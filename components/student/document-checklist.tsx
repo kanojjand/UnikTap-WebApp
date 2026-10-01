@@ -51,21 +51,21 @@ export function DocumentChecklist({
             <button
               onClick={() => toggle(block.id)}
               aria-pressed={active}
-              className="w-full flex items-start gap-3 text-left p-3 rounded-xl bg-white border border-gray-100"
+              className="w-full min-h-[56px] flex items-start gap-3 text-left p-3.5 rounded-xl bg-surface border border-line hover:bg-subtle/60 transition-colors"
             >
               <span
                 className={cn(
-                  'w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5',
-                  active ? 'bg-corpBlue border-corpBlue text-white' : 'border-gray-300',
+                  'w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-colors',
+                  active ? 'bg-primary border-primary text-white' : 'border-muted/50',
                 )}
               >
-                {active ? <Check className="w-3.5 h-3.5" aria-hidden /> : null}
+                {active ? <Check className="w-4 h-4" strokeWidth={3} aria-hidden /> : null}
               </span>
               <span className="flex-1">
-                <span className={cn('block text-sm font-medium', active ? 'text-gray-400 line-through' : 'text-gray-800')}>
+                <span className={cn('block text-[15px] font-medium', active ? 'text-muted line-through' : 'text-ink')}>
                   {title}
                 </span>
-                {content ? <span className="block text-xs text-gray-500 mt-0.5">{content}</span> : null}
+                {content ? <span className="block text-sm text-muted mt-0.5">{content}</span> : null}
               </span>
             </button>
           </li>

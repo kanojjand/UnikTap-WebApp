@@ -1,44 +1,46 @@
 'use client'
 
-import { Search, Map, Calculator, Bookmark, User } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
+import { NAV_ITEMS, hideBottomNav, isActive } from './nav-items'
 
-const ITEMS = [
-  { href: '/', icon: Search, key: 'search' as const },
-  { href: '/map', icon: Map, key: 'map' as const },
-  { href: '/calculator', icon: Calculator, key: 'calculator' as const },
-  { href: '/favorites', icon: Bookmark, key: 'favorites' as const },
-  { href: '/profile', icon: User, key: 'profile' as const },
-]
-
+/** Нижняя навигация — только на телефоне, под большой палец. На компьютере её заменяет SiteHeader. */
 export function BottomNav() {
   const pathname = usePathname()
   const t = useTranslations('nav')
 
+  if (hideBottomNav(pathname)) return null
+
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-100 py-3 md:max-w-md md:mx-auto"
-      style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
-      aria-label={t('search')}
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-line"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      aria-label="Основная навигация"
     >
-      <ul className="flex justify-around items-center">
-        {ITEMS.map((item) => {
-          const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+      <ul className="flex justify-around items-stretch px-1">
+        {NAV_ITEMS.map((item) => {
+          const active = isActive(pathname, item.href)
           const Icon = item.icon
           return (
-            <li key={item.href}>
+            <li key={item.href} className="flex-1">
               <Link
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-1 min-w-[56px] min-h-[44px] justify-center',
-                  active ? 'text-corpBlue' : 'text-gray-400',
+                  'flex flex-col items-center justify-center gap-1 min-h-[60px] transition-colors',
+                  active ? 'text-primary-ink' : 'text-muted active:text-ink',
                 )}
                 aria-current={active ? 'page' : undefined}
               >
-                <Icon className="w-6 h-6" strokeWidth={2} aria-hidden />
-                <span className="text-[10px] font-medium">{t(item.key)}</span>
+                <span
+                  className={cn(
+                    'flex items-center justify-center w-14 h-8 rounded-full transition-colors',
+                    active && 'bg-primary-soft',
+                  )}
+                >
+                  <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.4 : 2} aria-hidden />
+                </span>
+                <span className={cn('text-xs', active ? 'font-semibold' : 'font-medium')}>{t(item.key)}</span>
               </Link>
             </li>
           )

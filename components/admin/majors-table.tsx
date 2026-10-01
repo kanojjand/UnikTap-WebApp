@@ -12,12 +12,12 @@ import { Input, Select, Textarea } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
 import { ExportButton } from './charts'
 import { importMajorsCsv, saveMajor } from '@/lib/actions/admin-universities'
-import { formatMoney } from '@/lib/utils'
+import { formatMoney, majorCode, majorName } from '@/lib/utils'
 import type { City, UniversityMajor } from '@/types/domain'
 
 const CSV_TEMPLATE =
-  'university_slug,specialty_code,degree,fee_per_year,grant_score,paid_min_score,grants_count,languages,study_forms\n' +
-  'satbayev-university,B057,bachelor,1000000,95,60,120,"ru,kk,en",full_time'
+  'university_slug,specialty_code,program_code,program_name_ru,degree,fee_per_year,grant_score,paid_min_score,grants_count,languages,study_forms\n' +
+  'satbayev-university,B057,6B06101,Информационные системы,bachelor,1000000,95,60,120,"ru,kk,en",full_time'
 
 export function MajorsTable({ majors, cities }: { majors: UniversityMajor[]; cities: City[] }) {
   const [query, setQuery] = useState('')
@@ -33,7 +33,7 @@ export function MajorsTable({ majors, cities }: { majors: UniversityMajor[]; cit
         if (filter === 'no_score' && major.grant_score != null) return false
         if (filter === 'hidden' && major.is_published) return false
         if (query) {
-          const haystack = `${major.specialty?.code} ${major.specialty?.name_ru} ${major.university?.name_ru}`.toLowerCase()
+          const haystack = `${majorCode(major)} ${majorName(major, 'ru')} ${major.specialty?.code} ${major.specialty?.name_ru} ${major.university?.name_ru}`.toLowerCase()
           if (!haystack.includes(query.toLowerCase())) return false
         }
         return true
@@ -53,8 +53,9 @@ export function MajorsTable({ majors, cities }: { majors: UniversityMajor[]; cit
           </Link>
         ),
       },
-      { id: 'code', header: 'Код', accessorFn: (row) => row.specialty?.code ?? '' },
-      { id: 'name', header: 'Специальность', accessorFn: (row) => row.specialty?.name_ru ?? '' },
+      { id: 'code', header: 'Код', accessorFn: (row) => majorCode(row) },
+      { id: 'name', header: 'Программа', accessorFn: (row) => majorName(row, 'ru') },
+      { id: 'group', header: 'Группа', accessorFn: (row) => row.specialty?.code ?? '' },
       { accessorKey: 'degree', header: 'Уровень' },
       {
         accessorKey: 'grant_score',
@@ -136,6 +137,8 @@ export function MajorsTable({ majors, cities }: { majors: UniversityMajor[]; cit
             rows={rows.map((row) => ({
               university_slug: row.university?.slug ?? '',
               specialty_code: row.specialty?.code ?? '',
+              program_code: row.program_code ?? '',
+              program_name_ru: row.program_name_ru ?? '',
               degree: row.degree,
               fee_per_year: row.fee_per_year,
               grant_score: row.grant_score ?? '',

@@ -20,7 +20,7 @@ export function ReviewsSort() {
         else params.set('rsort', event.target.value)
         router.replace(`${pathname}?${params.toString()}`, { scroll: false })
       }}
-      className="py-2 text-sm max-w-[190px]"
+      className="w-full sm:w-auto sm:min-w-[210px]"
     >
       <option value="helpful">{t('sortHelpful')}</option>
       <option value="new">{t('sortNew')}</option>

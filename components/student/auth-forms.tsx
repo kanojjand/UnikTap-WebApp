@@ -1,14 +1,20 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { forwardRef, useState, useTransition } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { buttonClass } from '@/components/ui/button-styles'
 import { Field, Input } from '@/components/ui/input'
 import { Link } from '@/i18n/navigation'
 import {
-  requestPasswordReset, sendPhoneOtp, signInWithEmail, signUpWithEmail, verifyPhoneOtp,
+  requestPasswordReset,
+  sendPhoneOtp,
+  signInWithEmail,
+  signUpWithEmail,
+  verifyPhoneOtp,
 } from '@/lib/actions/auth'
 import { track } from '@/lib/analytics'
 
@@ -22,7 +28,7 @@ export function LoginForm({ next, phoneEnabled }: { next?: string; phoneEnabled:
   return (
     <div className="space-y-4">
       <form
-        className="space-y-3"
+        className="space-y-4"
         action={(formData) =>
           startTransition(async () => {
             setError('')
@@ -35,10 +41,10 @@ export function LoginForm({ next, phoneEnabled }: { next?: string; phoneEnabled:
         }
       >
         <Field label={t('email')} required>
-          {({ id }) => <Input id={id} name="email" type="email" autoComplete="email" required />}
+          {({ id }) => <Input id={id} name="email" type="email" inputMode="email" autoComplete="email" required />}
         </Field>
         <Field label={t('password')} required error={error}>
-          {({ id }) => <Input id={id} name="password" type="password" autoComplete="current-password" required />}
+          {({ id }) => <PasswordInput id={id} name="password" autoComplete="current-password" required />}
         </Field>
         <Button type="submit" fullWidth loading={pending}>
           {t('signIn')}
@@ -46,18 +52,16 @@ export function LoginForm({ next, phoneEnabled }: { next?: string; phoneEnabled:
       </form>
 
       {phoneEnabled ? (
-        <Link href="/auth/phone" className="block">
-          <Button variant="ghost" fullWidth>
-            {t('byPhone')}
-          </Button>
+        <Link href="/auth/phone" className={buttonClass('secondary', 'md', true)}>
+          {t('byPhone')}
         </Link>
       ) : null}
 
-      <div className="flex justify-between text-sm">
-        <Link href="/auth/forgot" className="text-corpBlue">
+      <div className="flex justify-between gap-3 text-[15px] -mx-2">
+        <Link href="/auth/forgot" className={LINK}>
           {t('forgot')}
         </Link>
-        <Link href="/auth/register" className="text-corpBlue">
+        <Link href="/auth/register" className={`${LINK} font-semibold`}>
           {t('signUp')}
         </Link>
       </div>
@@ -75,7 +79,7 @@ export function RegisterForm() {
   return (
     <div className="space-y-4">
       <form
-        className="space-y-3"
+        className="space-y-4"
         action={(formData) =>
           startTransition(async () => {
             setError('')
@@ -89,23 +93,21 @@ export function RegisterForm() {
           })
         }
       >
-        <Field label={t('name')}>
-          {({ id }) => <Input id={id} name="full_name" autoComplete="name" />}
-        </Field>
+        <Field label={t('name')}>{({ id }) => <Input id={id} name="full_name" autoComplete="name" />}</Field>
         <Field label={t('email')} required>
-          {({ id }) => <Input id={id} name="email" type="email" autoComplete="email" required />}
+          {({ id }) => <Input id={id} name="email" type="email" inputMode="email" autoComplete="email" required />}
         </Field>
-        <Field label={t('password')} required error={error} hint="Минимум 8 символов">
-          {({ id }) => <Input id={id} name="password" type="password" autoComplete="new-password" required minLength={8} />}
+        <Field label={t('password')} required error={error} hint={t('passwordHint')}>
+          {({ id }) => <PasswordInput id={id} name="password" autoComplete="new-password" required minLength={8} />}
         </Field>
         <Button type="submit" fullWidth loading={pending}>
           {t('signUp')}
         </Button>
       </form>
 
-      <p className="text-sm text-center text-gray-500">
+      <p className="text-[15px] text-center text-muted">
         {t('hasAccount')}{' '}
-        <Link href="/auth/login" className="text-corpBlue font-medium">
+        <Link href="/auth/login" className={`${LINK} font-semibold`}>
           {t('signIn')}
         </Link>
       </p>
@@ -152,14 +154,16 @@ export function PhoneForm() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <Field label={t('phone')} required error={!sent ? error : ''}>
         {({ id }) => (
           <Input
             id={id}
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
+            type="tel"
             inputMode="tel"
+            autoComplete="tel"
             placeholder="+7 (7__) ___-__-__"
             disabled={sent}
           />
@@ -175,7 +179,9 @@ export function PhoneForm() {
                 value={code}
                 onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 maxLength={6}
+                className="text-2xl font-semibold tracking-[0.4em]"
               />
             )}
           </Field>
@@ -184,6 +190,18 @@ export function PhoneForm() {
           </Button>
           <Button variant="ghost" fullWidth disabled={seconds > 0} onClick={send}>
             {seconds > 0 ? t('resendIn', { seconds }) : t('sendCode')}
+          </Button>
+          {/* Ошиблись номером — можно исправить, не начиная заново */}
+          <Button
+            variant="ghost"
+            fullWidth
+            onClick={() => {
+              setSent(false)
+              setCode('')
+              setError('')
+            }}
+          >
+            {t('changePhone')}
           </Button>
         </>
       ) : (
@@ -200,25 +218,66 @@ export function ForgotForm() {
   const locale = useLocale()
   const [email, setEmail] = useState('')
   const [pending, startTransition] = useTransition()
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
   return (
-    <div className="space-y-3">
-      <Field label={t('email')} required hint={message}>
-        {({ id }) => <Input id={id} type="email" value={email} onChange={(event) => setEmail(event.target.value)} />}
+    <form
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        startTransition(async () => {
+          const result = await requestPasswordReset(email, locale)
+          setMessage(
+            result.ok ? { ok: true, text: result.message ?? t('resetSent') } : { ok: false, text: result.error },
+          )
+        })
+      }}
+    >
+      <Field label={t('email')} required error={message && !message.ok ? message.text : undefined}>
+        {({ id }) => (
+          <Input
+            id={id}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        )}
       </Field>
-      <Button
-        fullWidth
-        loading={pending}
-        onClick={() =>
-          startTransition(async () => {
-            const result = await requestPasswordReset(email, locale)
-            setMessage(result.ok ? (result.message ?? t('resetSent')) : result.error)
-          })
-        }
-      >
+      {message?.ok ? (
+        <p role="status" className="text-[15px] text-success bg-success-soft rounded-xl p-3">
+          {message.text}
+        </p>
+      ) : null}
+      <Button type="submit" fullWidth loading={pending}>
         {t('resetSubmit')}
       </Button>
-    </div>
+    </form>
   )
 }
+
+const LINK = 'inline-flex items-center min-h-[44px] px-2 rounded-lg text-primary-ink hover:bg-primary-soft'
+
+/** Пароль с кнопкой «показать» — меньше ошибок при вводе на телефоне. */
+const PasswordInput = forwardRef<HTMLInputElement, Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'>>(
+  function PasswordInput(props, ref) {
+    const [visible, setVisible] = useState(false)
+    const t = useTranslations('auth')
+    return (
+      <div className="relative">
+        <Input ref={ref} type={visible ? 'text' : 'password'} className="pr-12" {...props} />
+        <button
+          type="button"
+          onClick={() => setVisible((value) => !value)}
+          aria-label={visible ? t('hidePassword') : t('showPassword')}
+          aria-pressed={visible}
+          className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 rounded-lg flex items-center justify-center text-muted hover:text-ink"
+        >
+          {visible ? <EyeOff className="w-5 h-5" aria-hidden /> : <Eye className="w-5 h-5" aria-hidden />}
+        </button>
+      </div>
+    )
+  },
+)

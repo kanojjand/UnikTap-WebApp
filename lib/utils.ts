@@ -45,6 +45,26 @@ export function pick(
   return typeof fallback === 'string' ? fallback : ''
 }
 
+type MajorLabel = {
+  program_code?: string | null
+  program_name_ru?: string | null
+  program_name_kk?: string | null
+  specialty?: { code: string; name_ru: string; name_kk: string } | null
+}
+
+/** Название программы вуза, а если его нет — название группы ОП. */
+export function majorName(major: MajorLabel, locale: string): string {
+  return (
+    pick(major as Record<string, unknown>, 'program_name', locale) ||
+    pick(major.specialty as Record<string, unknown> | null, 'name', locale)
+  )
+}
+
+/** Код программы (6B01101), а если его нет — код группы (B001). */
+export function majorCode(major: MajorLabel): string {
+  return major.program_code || major.specialty?.code || ''
+}
+
 export function formatMoney(value: number | null | undefined, locale = 'ru'): string {
   if (value === null || value === undefined) return '—'
   if (value === 0) return locale === 'kk' ? 'Тегін' : 'Бесплатно'

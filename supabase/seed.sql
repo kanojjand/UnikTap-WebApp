@@ -268,7 +268,7 @@ from (values
 ) as v(uslug, scode, forms, langs, years, fee, grant_score, paid_score, grants_total, descr, ord)
 join public.universities u on u.slug = v.uslug
 join public.specialties s on s.code = v.scode
-on conflict (university_id, specialty_id, degree) do nothing;
+on conflict do nothing;
 
 -- ── История проходных баллов (3 года) ─────────────────────────────────
 insert into public.major_score_history (university_major_id, year, grant_score, paid_min_score, grants_count, applicants_count)

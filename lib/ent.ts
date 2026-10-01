@@ -56,10 +56,7 @@ export function resolveThresholdCategory(input: {
   return 'default'
 }
 
-export function getThreshold(
-  thresholds: AppSettings['ent_thresholds'],
-  category: string,
-): number {
+export function getThreshold(thresholds: AppSettings['ent_thresholds'], category: string): number {
   return thresholds[category] ?? thresholds.default ?? 50
 }
 
@@ -102,7 +99,9 @@ export function rankMajorsByChance(
       const chance = getChance(userScore, major.grant_score, threshold, settings.chance_bands)
       const required = [major.specialty?.subject_1_id ?? null, major.specialty?.subject_2_id ?? null]
       const subjectsMatch =
-        !userSubjects[0] || !userSubjects[1] || required.every((id) => id === null) ||
+        !userSubjects[0] ||
+        !userSubjects[1] ||
+        required.every((id) => id === null) ||
         required.every((id) => id === null || userSubjects.includes(id))
 
       return {
@@ -128,8 +127,7 @@ export function relevanceScore(
   opts: { chance?: Chance; maxViews?: number; completeness?: number } = {},
 ): number {
   const rating = (Number(university.rating) || 0) / 5
-  const chanceWeight =
-    opts.chance === 'high' ? 1 : opts.chance === 'medium' ? 0.6 : opts.chance === 'low' ? 0.2 : 0
+  const chanceWeight = opts.chance === 'high' ? 1 : opts.chance === 'medium' ? 0.6 : opts.chance === 'low' ? 0.2 : 0
   const views = opts.maxViews && opts.maxViews > 0 ? Number(university.views_count) / opts.maxViews : 0
   const completeness = opts.completeness ?? cardCompleteness(university as unknown as Record<string, unknown>)
 
@@ -143,8 +141,18 @@ export function relevanceScore(
 }
 
 const KEY_FIELDS = [
-  'description_ru', 'history_ru', 'address_ru', 'whatsapp', 'email', 'website',
-  'admission_url', 'logo_url', 'cover_url', 'founded_year', 'students_count', 'lat',
+  'description_ru',
+  'history_ru',
+  'address_ru',
+  'whatsapp',
+  'email',
+  'website',
+  'admission_url',
+  'logo_url',
+  'cover_url',
+  'founded_year',
+  'students_count',
+  'lat',
 ]
 
 /** Полнота карточки 0..1 — используется в ранжировании и в индикаторе админки. */
@@ -169,8 +177,8 @@ export function missingFields(university: Record<string, unknown>): string[] {
 }
 
 export const CHANCE_STYLES: Record<Chance, string> = {
-  high: 'bg-green-100 text-green-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  low: 'bg-red-100 text-red-700',
-  below_threshold: 'bg-gray-100 text-gray-600',
+  high: 'bg-success-soft text-success',
+  medium: 'bg-warning-soft text-warning',
+  low: 'bg-danger-soft text-danger',
+  below_threshold: 'bg-subtle text-body',
 }

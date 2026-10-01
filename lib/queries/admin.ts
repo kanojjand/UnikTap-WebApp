@@ -162,7 +162,7 @@ export async function adminDashboard(days = 30): Promise<DashboardData> {
     supabase.from('analytics_events').select('event_name, session_id, user_id, university_id, major_id, created_at').gte('created_at', since).limit(50000),
     supabase.from('profiles').select('id, ent_score, city_id, created_at'),
     supabase.from('universities').select('id, name_ru, views_count, is_published, deleted_at, phones, whatsapp'),
-    supabase.from('university_majors').select('id, university_id, specialty_id, grant_score, is_published, deleted_at, specialty:specialties(name_ru)'),
+    supabase.from('university_majors').select('id, university_id, specialty_id, grant_score, is_published, deleted_at, program_name_ru, specialty:specialties(name_ru)'),
     supabase.from('reviews').select('id, status, rating, deleted_at, created_at'),
     supabase.from('cities').select('id, name_ru'),
     adminAudit(10),
@@ -171,7 +171,7 @@ export async function adminDashboard(days = 30): Promise<DashboardData> {
   type Event = { event_name: string; session_id: string; user_id: string | null; university_id: string | null; major_id: string | null; created_at: string }
   const eventRows = (events.data ?? []) as Event[]
   const universityRows = (universities.data ?? []) as { id: string; name_ru: string; views_count: number; is_published: boolean; deleted_at: string | null; phones: string[]; whatsapp: string }[]
-  const majorRows = (majors.data ?? []) as unknown as { id: string; university_id: string; grant_score: number | null; is_published: boolean; deleted_at: string | null; specialty: { name_ru: string } | null }[]
+  const majorRows = (majors.data ?? []) as unknown as { id: string; university_id: string; grant_score: number | null; is_published: boolean; deleted_at: string | null; program_name_ru?: string; specialty: { name_ru: string } | null }[]
   const reviewRows = (reviews.data ?? []) as { id: string; status: string; rating: number; deleted_at: string | null; created_at: string }[]
   const profileRows = (profiles.data ?? []) as { id: string; ent_score: number | null; city_id: number | null; created_at: string }[]
   const cityRows = (cities.data ?? []) as { id: number; name_ru: string }[]
@@ -256,7 +256,10 @@ export async function adminDashboard(days = 30): Promise<DashboardData> {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([id, interest]) => ({
-        name: majorRows.find((row) => row.id === id)?.specialty?.name_ru ?? '—',
+        name: (() => {
+          const row = majorRows.find((major) => major.id === id)
+          return row?.program_name_ru || row?.specialty?.name_ru || '—'
+        })(),
         interest,
       })),
     scoreBuckets: [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([bucket, count]) => ({ bucket, count })),

@@ -14,9 +14,9 @@ export default function LocaleError({ error, reset }: { error: Error & { digest?
   }, [error])
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-white px-4">
+    <div className="min-h-[70dvh] flex items-center justify-center px-4">
       <EmptyState
-        icon={<AlertTriangle className="w-12 h-12" />}
+        icon={<AlertTriangle />}
         title={t('title')}
         text={t('text')}
         action={<Button onClick={reset}>{t('retry')}</Button>}

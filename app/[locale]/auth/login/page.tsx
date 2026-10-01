@@ -7,7 +7,6 @@ import { getSettings } from '@/lib/queries/settings'
 // Зависит от сессии пользователя — рендерим на каждый запрос
 export const dynamic = 'force-dynamic'
 
-
 export default async function LoginPage({
   params,
   searchParams,
@@ -27,7 +26,7 @@ export default async function LoginPage({
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">{t('login')}</h1>
+      <h1 className="text-[26px] font-bold tracking-tight text-ink mb-6">{t('login')}</h1>
       <LoginForm next={next} phoneEnabled={settings.auth_phone_enabled} />
     </>
   )

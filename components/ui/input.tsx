@@ -5,11 +5,15 @@ import { cn } from '@/lib/utils'
 
 type Surface = 'header' | 'light' | 'admin'
 
+// text-base (16px) обязателен: при меньшем шрифте iOS зумит страницу при фокусе
+const BASE =
+  'w-full min-w-0 text-base text-ink placeholder:text-muted rounded-xl min-h-[48px] px-4 py-3 outline-none transition-colors ' +
+  'disabled:opacity-60 disabled:cursor-not-allowed'
+
 const SURFACES: Record<Surface, string> = {
-  header: 'bg-white rounded-xl py-3 px-4 border-none shadow-sm outline-none text-gray-700',
-  light: 'bg-softBlue rounded-xl px-4 py-3 border-none outline-none focus:ring-2 focus:ring-corpBlue/50',
-  admin:
-    'bg-slateBg border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-corpBlue focus:ring-1 focus:ring-corpBlue',
+  header: 'bg-surface border border-line shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20',
+  light: 'bg-subtle border border-transparent focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20',
+  admin: 'bg-canvas border border-line focus:border-primary focus:ring-1 focus:ring-primary md:text-sm',
 }
 
 interface FieldProps {
@@ -28,19 +32,24 @@ export function Field({ label, error, hint, required, children, className }: Fie
   return (
     <div className={cn('w-full', className)}>
       {label ? (
-        <label htmlFor={id} className="block text-sm font-bold text-gray-700 mb-1">
+        <label htmlFor={id} className="block text-sm font-semibold text-body mb-1.5">
           {label}
-          {required ? <span className="text-red-500"> *</span> : null}
+          {required ? (
+            <span className="text-danger" aria-hidden>
+              {' '}
+              *
+            </span>
+          ) : null}
         </label>
       ) : null}
       {children({ id, describedBy, invalid: Boolean(error) })}
       {hint && !error ? (
-        <p id={`${id}-hint`} className="text-xs text-gray-500 mt-1">
+        <p id={`${id}-hint`} className="text-sm text-muted mt-1.5">
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={`${id}-error`} className="text-xs text-red-600 mt-1">
+        <p id={`${id}-error`} role="alert" className="text-sm text-danger mt-1.5">
           {error}
         </p>
       ) : null}
@@ -56,7 +65,7 @@ export const Input = forwardRef<
     <input
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn('w-full', SURFACES[surface], invalid && 'border border-red-400', className)}
+      className={cn(BASE, SURFACES[surface], invalid && 'border-danger focus:border-danger', className)}
       {...props}
     />
   )
@@ -70,11 +79,20 @@ export const Textarea = forwardRef<
     <textarea
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn('w-full leading-relaxed', SURFACES[surface], invalid && 'border border-red-400', className)}
+      className={cn(
+        BASE,
+        'leading-relaxed',
+        SURFACES[surface],
+        invalid && 'border-danger focus:border-danger',
+        className,
+      )}
       {...props}
     />
   )
 })
+
+/** Стрелка вниз (класс в globals.css) показывает, что это выпадающий список, а не текст. */
+const CHEVRON = 'select-chevron pr-10'
 
 export const Select = forwardRef<
   HTMLSelectElement,
@@ -84,7 +102,14 @@ export const Select = forwardRef<
     <select
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn('w-full appearance-none', SURFACES[surface], invalid && 'border border-red-400', className)}
+      className={cn(
+        BASE,
+        'appearance-none cursor-pointer',
+        CHEVRON,
+        SURFACES[surface],
+        invalid && 'border-danger',
+        className,
+      )}
       {...props}
     >
       {children}
@@ -112,16 +137,16 @@ export function Switch({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-corpBlue focus-visible:ring-offset-2',
-        checked ? 'bg-corpBlue' : 'bg-gray-300',
+        'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+        checked ? 'bg-primary' : 'bg-line',
         disabled && 'opacity-50 cursor-not-allowed',
       )}
     >
       <span
         className={cn(
-          'inline-block h-5 w-5 transform rounded-full bg-white transition-transform',
-          checked ? 'translate-x-5' : 'translate-x-0.5',
+          'inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform',
+          checked ? 'translate-x-[22px]' : 'translate-x-0.5',
         )}
       />
     </button>

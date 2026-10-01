@@ -1,5 +1,4 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { BottomNav } from '@/components/ui/bottom-nav'
 import { MapLoader } from '@/components/student/map/map-loader'
 import { getMapUniversities } from '@/lib/queries/universities'
 import { getCities } from '@/lib/queries/dictionaries'
@@ -10,13 +9,12 @@ import { getChance, getThreshold, resolveThresholdCategory } from '@/lib/ent'
 // Зависит от сессии пользователя — рендерим на каждый запрос
 export const dynamic = 'force-dynamic'
 
-
 export default async function MapPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  const t = await getTranslations('map')
-  const [universities, cities, settings, profile] = await Promise.all([
+  const [t, universities, cities, settings, profile] = await Promise.all([
+    getTranslations('map'),
     getMapUniversities(),
     getCities(),
     getSettings(),
@@ -38,12 +36,14 @@ export default async function MapPage({ params }: { params: Promise<{ locale: st
   }))
 
   return (
-    <div className="min-h-[100dvh] pb-20 bg-slateBg">
-      <header className="bg-corpBlue px-4 pt-10 pb-6 rounded-b-2xl">
-        <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
+    // Карта занимает весь экран между заголовком и нижней навигацией
+    <div className="flex flex-col h-[100dvh] md:h-[calc(100dvh-4rem)] pb-[calc(60px+env(safe-area-inset-bottom))] md:pb-6">
+      <header className="container-app pt-safe pb-3 md:pb-4 shrink-0">
+        <h1 className="text-[26px] md:text-3xl font-bold tracking-tight text-ink">{t('title')}</h1>
       </header>
-      <MapLoader points={points} cities={cities} locale={locale} />
-      <BottomNav />
+      <div className="flex-1 min-h-0 w-full md:mx-auto md:max-w-6xl md:px-6">
+        <MapLoader points={points} cities={cities} locale={locale} />
+      </div>
     </div>
   )
 }

@@ -4,15 +4,18 @@ import { Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslations } from 'next-intl'
 import { track } from '@/lib/analytics'
+import { cn } from '@/lib/utils'
 
 export function ShareButton({
   title,
   universityId,
   className,
+  withLabel = false,
 }: {
   title: string
   universityId?: string
   className?: string
+  withLabel?: boolean
 }) {
   const t = useTranslations('common')
 
@@ -33,8 +36,14 @@ export function ShareButton({
   }
 
   return (
-    <button onClick={share} aria-label={t('share')} className={className}>
+    <button
+      type="button"
+      onClick={share}
+      aria-label={t('share')}
+      className={cn('inline-flex items-center justify-center gap-2 min-w-[44px] min-h-[44px]', className)}
+    >
       <Share2 className="w-5 h-5" aria-hidden />
+      {withLabel ? <span>{t('share')}</span> : null}
     </button>
   )
 }

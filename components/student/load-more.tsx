@@ -5,7 +5,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
-/** Бесконечная прокрутка через IntersectionObserver + кнопка как запасной вариант. */
+/**
+ * Кнопка «Показать ещё» + автоподгрузка при прокрутке.
+ * Лента не бесконечная: подгружаем по 20, пока есть что показать.
+ */
 export function LoadMore({ page, hasMore }: { page: number; hasMore: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -36,8 +39,8 @@ export function LoadMore({ page, hasMore }: { page: number; hasMore: boolean }) 
   if (!hasMore) return null
 
   return (
-    <div ref={sentinel} className="pt-4 flex justify-center">
-      <Button variant="secondary" onClick={loadNext} loading={pending}>
+    <div ref={sentinel} className="pt-6 flex justify-center">
+      <Button variant="secondary" onClick={loadNext} loading={pending} className="min-w-[200px]">
         {t('showMore')}
       </Button>
     </div>

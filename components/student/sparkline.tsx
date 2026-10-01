@@ -24,17 +24,22 @@ export function Sparkline({
 
   return (
     <figure className="mt-2">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-14" role="img" aria-label="Динамика проходного балла">
-        <polyline points={path} fill="none" stroke="#1E3A8A" strokeWidth="2" strokeLinejoin="round" />
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-14 text-primary-ink"
+        role="img"
+        aria-label="Динамика проходного балла"
+      >
+        <polyline points={path} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
         {coords.map((c) => (
-          <circle key={c.year} cx={c.x} cy={c.y} r="2.5" fill="#1E3A8A" />
+          <circle key={c.year} cx={c.x} cy={c.y} r="2.5" fill="currentColor" />
         ))}
       </svg>
-      <figcaption className="flex justify-between text-[10px] text-gray-400">
+      <figcaption className="flex justify-between text-xs text-muted">
         {coords.map((c) => (
           <span key={c.year}>
             {c.year}
-            <span className="ml-1 text-gray-500 font-medium">{c.value}</span>
+            <span className="ml-1 text-body font-medium">{c.value}</span>
           </span>
         ))}
       </figcaption>

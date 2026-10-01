@@ -3,9 +3,8 @@ import { unstable_cache } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createPublicClient } from '@/lib/supabase/public'
 import { relevanceScore } from '@/lib/ent'
-import type {
-  AdmissionBlock, CatalogFilters, University, UniversityImage, UniversityMajor,
-} from '@/types/domain'
+import { getCities } from './dictionaries'
+import type { AdmissionBlock, CatalogFilters, University, UniversityImage, UniversityMajor } from '@/types/domain'
 
 export const PAGE_SIZE = 20
 
@@ -16,9 +15,7 @@ const LIST_FIELDS =
   'is_published, deleted_at, created_at, updated_at, city:cities(*)'
 
 /** Каталог с фильтрами из раздела 6.2. Все параметры приходят из URL. */
-export async function getUniversities(
-  filters: CatalogFilters,
-): Promise<{ items: University[]; total: number }> {
+export async function getUniversities(filters: CatalogFilters): Promise<{ items: University[]; total: number }> {
   const supabase = await createClient()
   const page = Math.max(1, filters.page ?? 1)
 
@@ -30,13 +27,12 @@ export async function getUniversities(
 
   if (filters.q) {
     const like = `%${filters.q.replace(/[%,]/g, '')}%`
-    query = query.or(
-      `name_ru.ilike.${like},name_kk.ilike.${like},short_name.ilike.${like},abbr.ilike.${like}`,
-    )
+    query = query.or(`name_ru.ilike.${like},name_kk.ilike.${like},short_name.ilike.${like},abbr.ilike.${like}`)
   }
 
   if (filters.city) {
-    const { data: city } = await supabase.from('cities').select('id').eq('slug', filters.city).maybeSingle()
+    // Справочник городов уже в кэше — не ходим в базу за id отдельным запросом
+    const city = (await getCities()).find((item) => item.slug === filters.city)
     if (city) query = query.eq('city_id', city.id)
   }
 
@@ -99,88 +95,84 @@ export async function getUniversities(
   return { items, total: count ?? items.length }
 }
 
-export const getUniversityBySlug = cache(
-  async (slug: string): Promise<University | null> =>
-    unstable_cache(
-      async () => {
-        const { data } = await createPublicClient()
-          .from('universities')
-          .select('*, city:cities(*)')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .is('deleted_at', null)
-          .maybeSingle()
-        return (data as unknown as University) ?? null
-      },
-      ['university', slug],
-      { revalidate: 3600, tags: ['universities', `university:${slug}`] },
-    )(),
+export const getUniversityBySlug = cache(async (slug: string): Promise<University | null> =>
+  unstable_cache(
+    async () => {
+      const { data } = await createPublicClient()
+        .from('universities')
+        .select('*, city:cities(*)')
+        .eq('slug', slug)
+        .eq('is_published', true)
+        .is('deleted_at', null)
+        .maybeSingle()
+      return (data as unknown as University) ?? null
+    },
+    ['university', slug],
+    { revalidate: 3600, tags: ['universities', `university:${slug}`] },
+  )(),
 )
 
-export const getUniversityImages = cache(
-  async (universityId: string): Promise<UniversityImage[]> =>
-    unstable_cache(
-      async () => {
-        const { data } = await createPublicClient()
-          .from('university_images')
-          .select('*')
-          .eq('university_id', universityId)
-          .order('sort_order')
-        return (data ?? []) as UniversityImage[]
-      },
-      ['university_images', universityId],
-      { revalidate: 3600, tags: ['universities'] },
-    )(),
+export const getUniversityImages = cache(async (universityId: string): Promise<UniversityImage[]> =>
+  unstable_cache(
+    async () => {
+      const { data } = await createPublicClient()
+        .from('university_images')
+        .select('*')
+        .eq('university_id', universityId)
+        .order('sort_order')
+      return (data ?? []) as UniversityImage[]
+    },
+    ['university_images', universityId],
+    { revalidate: 3600, tags: ['universities'] },
+  )(),
 )
 
-export const getAdmissionBlocks = cache(
-  async (universityId: string): Promise<AdmissionBlock[]> =>
-    unstable_cache(
-      async () => {
-        const { data } = await createPublicClient()
-          .from('admission_blocks')
-          .select('*')
-          .eq('university_id', universityId)
-          .eq('is_published', true)
-          .order('sort_order')
-        return (data ?? []) as AdmissionBlock[]
-      },
-      ['admission_blocks', universityId],
-      { revalidate: 3600, tags: ['universities'] },
-    )(),
+export const getAdmissionBlocks = cache(async (universityId: string): Promise<AdmissionBlock[]> =>
+  unstable_cache(
+    async () => {
+      const { data } = await createPublicClient()
+        .from('admission_blocks')
+        .select('*')
+        .eq('university_id', universityId)
+        .eq('is_published', true)
+        .order('sort_order')
+      return (data ?? []) as AdmissionBlock[]
+    },
+    ['admission_blocks', universityId],
+    { revalidate: 3600, tags: ['universities'] },
+  )(),
 )
 
-export const getUniversityMajors = cache(
-  async (universityId: string): Promise<UniversityMajor[]> =>
-    unstable_cache(
-      async () => {
-        const { data } = await createPublicClient()
-          .from('university_majors')
-          .select('*, specialty:specialties(*), history:major_score_history(*)')
-          .eq('university_id', universityId)
-          .eq('is_published', true)
-          .is('deleted_at', null)
-          .order('sort_order')
-        return (data ?? []) as unknown as UniversityMajor[]
-      },
-      ['university_majors', universityId],
-      { revalidate: 3600, tags: ['universities', 'majors'] },
-    )(),
+export const getUniversityMajors = cache(async (universityId: string): Promise<UniversityMajor[]> =>
+  unstable_cache(
+    async () => {
+      const { data } = await createPublicClient()
+        .from('university_majors')
+        .select('*, specialty:specialties(*), history:major_score_history(*)')
+        .eq('university_id', universityId)
+        .eq('is_published', true)
+        .is('deleted_at', null)
+        .order('sort_order')
+      return (data ?? []) as unknown as UniversityMajor[]
+    },
+    ['university_majors', universityId],
+    { revalidate: 3600, tags: ['universities', 'majors'] },
+  )(),
 )
 
 /** Все опубликованные ОП — для калькулятора и карты. */
 export const getAllMajors = cache(
   unstable_cache(
     async (): Promise<UniversityMajor[]> => {
-  const { data } = await createPublicClient()
-    .from('university_majors')
-    .select(
-      '*, specialty:specialties(*), university:universities!inner(id, slug, name_ru, name_kk, logo_url, type, city_id)',
-    )
-    .eq('is_published', true)
-    .is('deleted_at', null)
-    .eq('universities.is_published', true)
-    .limit(2000)
+      const { data } = await createPublicClient()
+        .from('university_majors')
+        .select(
+          '*, specialty:specialties(*), university:universities!inner(id, slug, name_ru, name_kk, logo_url, type, city_id)',
+        )
+        .eq('is_published', true)
+        .is('deleted_at', null)
+        .eq('universities.is_published', true)
+        .limit(2000)
       return (data ?? []) as unknown as UniversityMajor[]
     },
     ['all_majors'],
@@ -193,9 +185,9 @@ export const getMapUniversities = cache(
     async (): Promise<University[]> => {
       const { data } = await createPublicClient()
         .from('universities')
-    .select(LIST_FIELDS)
-    .eq('is_published', true)
-    .is('deleted_at', null)
+        .select(LIST_FIELDS)
+        .eq('is_published', true)
+        .is('deleted_at', null)
         .not('lat', 'is', null)
         .limit(500)
       return (data ?? []) as unknown as University[]

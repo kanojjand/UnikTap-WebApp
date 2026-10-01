@@ -3,11 +3,11 @@ import { cn } from '@/lib/utils'
 type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info'
 
 const TONES: Record<Tone, string> = {
-  neutral: 'bg-gray-100 text-gray-600',
-  success: 'bg-green-100 text-green-700',
-  warning: 'bg-yellow-100 text-yellow-700',
-  danger: 'bg-red-100 text-red-700',
-  info: 'bg-softBlue text-corpBlue',
+  neutral: 'bg-subtle text-body',
+  success: 'bg-success-soft text-success',
+  warning: 'bg-warning-soft text-warning',
+  danger: 'bg-danger-soft text-danger',
+  info: 'bg-primary-soft text-primary-ink',
 }
 
 export function Badge({
@@ -19,8 +19,9 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full font-semibold',
-        mini ? 'text-[10px] px-2 py-0.5' : 'text-xs px-3 py-1',
+        'inline-flex items-center gap-1 font-semibold max-w-full',
+        // Короткие метки не переносятся; длинные (аккредитация) переносятся, а не растягивают экран
+        mini ? 'text-xs px-2 py-0.5 rounded-full whitespace-nowrap' : 'text-xs px-3 py-1 rounded-2xl',
         TONES[tone],
         className,
       )}

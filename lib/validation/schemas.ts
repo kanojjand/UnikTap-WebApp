@@ -88,6 +88,10 @@ export const majorSchema = z.object({
   id: z.string().uuid().optional(),
   university_id: z.string().uuid(),
   specialty_id: z.number().int(),
+  // не заданы — не меняются: правка балла в таблице не затирает название программы
+  program_code: z.string().trim().max(20).optional(),
+  program_name_ru: z.string().trim().max(300).optional(),
+  program_name_kk: z.string().trim().max(300).optional(),
   degree: z.enum(['bachelor', 'master', 'phd', 'college']).default('bachelor'),
   study_forms: z.array(z.enum(['full_time', 'part_time', 'evening', 'distance'])).default(['full_time']),
   languages: z.array(z.string().max(4)).default(['ru']),
@@ -96,8 +100,8 @@ export const majorSchema = z.object({
   grant_score: z.number().int().min(0).max(140).nullable().optional(),
   paid_min_score: z.number().int().min(0).max(140).nullable().optional(),
   grants_count: z.number().int().min(0).nullable().optional(),
-  description_ru: z.string().max(2000).optional().default(''),
-  description_kk: z.string().max(2000).optional().default(''),
+  description_ru: z.string().max(2000).optional(),
+  description_kk: z.string().max(2000).optional(),
   is_published: z.boolean().default(true),
   sort_order: z.number().int().default(100),
 })

@@ -52,6 +52,22 @@ export interface Socials {
   youtube?: string
   tiktok?: string
   linkedin?: string
+  vk?: string
+  x?: string
+}
+
+export interface Faculty {
+  name_ru: string
+  name_kk?: string
+}
+
+/** Корпус, общежитие или отдельная приёмная — всё, что не главный адрес вуза. */
+export interface Campus {
+  title_ru?: string
+  title_kk?: string
+  address_ru: string
+  address_kk?: string
+  twogis_url?: string
 }
 
 export interface University {
@@ -101,6 +117,9 @@ export interface University {
   views_count: number
   logo_url: string | null
   cover_url: string | null
+  /** Появились в миграции 0011 — в базе без неё их нет. */
+  faculties?: Faculty[]
+  campuses?: Campus[]
   is_published: boolean
   is_featured: boolean
   sort_order: number
@@ -151,6 +170,13 @@ export interface UniversityMajor {
   id: string
   university_id: string
   specialty_id: number
+  /**
+   * Код и название программы вуза (6B01101 «Психология»). specialty — это группа ОП,
+   * от неё берутся предметы ЕНТ. Пусто — показывается название группы.
+   */
+  program_code?: string
+  program_name_ru?: string
+  program_name_kk?: string
   degree: DegreeLevel
   study_forms: StudyForm[]
   languages: string[]

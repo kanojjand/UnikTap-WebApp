@@ -123,13 +123,15 @@ for (const [table, min, label] of expect) {
 console.log('\n═══ Вузы ═══')
 const { data: shymkent } = await db.from('cities').select('id').eq('slug', 'shymkent').single()
 const totalU = await count('universities')
-const shymU = shymkent ? await count('universities', (q) => q.eq('city_id', shymkent.id)) : { n: 0 }
+const shymU = shymkent
+  ? await count('universities', (q) => q.eq('city_id', shymkent.id).eq('is_published', true))
+  : { n: 0 }
 console.log(`   всего вузов: ${totalU.n}`)
-console.log(`   из них Шымкент: ${shymU.n}`)
+console.log(`   из них опубликовано в Шымкенте: ${shymU.n}`)
 
-if (shymU.n >= 11) console.log(`${OK} Данные по Шымкенту загружены`)
-else if (shymU.n > 0) console.log(`${WARN} Шымкента меньше 11 — возможно, скрипт выполнен не полностью`)
-else console.log(`${BAD} Вузов Шымкента нет — выполните supabase/shymkent-universities.sql`)
+if (shymU.n >= 10) console.log(`${OK} Данные по Шымкенту загружены`)
+else if (shymU.n > 0) console.log(`${WARN} Шымкента меньше 10 — запустите node supabase/apply-shymkent-2026.mjs`)
+else console.log(`${BAD} Вузов Шымкента нет — запустите node supabase/apply-shymkent-2026.mjs`)
 
 if (shymkent) {
   const { data: rows } = await db
@@ -152,13 +154,12 @@ if (shymkent) {
 
 // ── программы ────────────────────────────────────────────────────────
 console.log('═══ Образовательные программы ═══')
-const majors = await count('university_majors')
-const noPrice = await count('university_majors', (q) => q.is('fee_per_year', null))
+const majors = await count('university_majors', (q) => q.is('deleted_at', null))
+const noPrice = await count('university_majors', (q) => q.is('deleted_at', null).is('fee_per_year', null))
 console.log(`   всего программ: ${majors.n}`)
 console.log(`   без опубликованной цены: ${noPrice.n} (это нормально — вузы их не публикуют)`)
 if (noPrice.error?.includes('fee_per_year')) {
-  console.log(`${BAD} Колонка fee_per_year не допускает null — выполните shymkent-universities.sql,`)
-  console.log('   он снимает это ограничение первой же строкой.')
+  console.log(`${BAD} Колонка fee_per_year не допускает null — выполните migrations/0011_programs_campuses.sql.`)
 }
 
 // ── хранилище ────────────────────────────────────────────────────────

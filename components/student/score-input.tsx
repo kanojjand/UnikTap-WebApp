@@ -10,6 +10,7 @@ import { Field, Input, Select } from '@/components/ui/input'
 import { updateProfile } from '@/lib/actions/profile'
 import { clampScore, sumEntSections } from '@/lib/ent'
 import { track } from '@/lib/analytics'
+import { haptic } from '@/lib/haptics'
 import type { AppSettings, EntSubject } from '@/types/domain'
 import { AuthWall } from './auth-wall'
 
@@ -27,7 +28,6 @@ export function ScoreInput({
   locale: string
 }) {
   const t = useTranslations('calculator')
-  const tc = useTranslations('common')
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [wall, setWall] = useState(false)
@@ -72,95 +72,111 @@ export function ScoreInput({
         ent_score: finalScore || null,
         ent_subject_1_id: subject1 ? Number(subject1) : null,
         ent_subject_2_id: subject2 ? Number(subject2) : null,
-        ent_details: Object.fromEntries(
-          Object.entries(sections).map(([key, value]) => [key, Number(value) || 0]),
-        ),
+        ent_details: Object.fromEntries(Object.entries(sections).map(([key, value]) => [key, Number(value) || 0])),
       })
-      if (result.ok) toast.success(tc('save'))
-      else if (result.error === 'unauthorized') setWall(true)
+      if (result.ok) {
+        haptic()
+        toast.success(t('savedToProfile'))
+      } else if (result.error === 'unauthorized') setWall(true)
       else toast.error(result.error)
     })
   }
 
   return (
     <div className="space-y-4">
-      <Card className="p-5 space-y-4">
-        {!detailed ? (
-          <Field label={t('total')} hint={`0–${settings.ent_max_score}`}>
-            {({ id }) => (
-              <Input
-                id={id}
-                type="number"
-                min={0}
-                max={settings.ent_max_score}
-                inputMode="numeric"
-                value={score}
-                onChange={(event) => setScore(event.target.value)}
-                className="text-2xl font-bold text-corpBlue"
-              />
-            )}
-          </Field>
-        ) : (
-          <div className="space-y-3">
-            {Object.entries(settings.ent_structure).map(([key, max]) => (
-              <Field key={key} label={`${SECTION_LABELS[key] ?? key} (0–${max})`}>
-                {({ id }) => (
-                  <Input
-                    id={id}
-                    type="number"
-                    min={0}
-                    max={max}
-                    value={sections[key] ?? ''}
-                    onChange={(event) => setSections({ ...sections, [key]: event.target.value })}
-                  />
-                )}
-              </Field>
-            ))}
-            <p className="text-sm font-bold text-corpBlue">
-              {t('total')}: {sectionTotal}
-            </p>
+      <Card as="section" className="p-4 md:p-6 space-y-5">
+        <form
+          className="space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault()
+            showChances()
+          }}
+        >
+          {!detailed ? (
+            <Field label={t('total')} hint={`0–${settings.ent_max_score}`}>
+              {({ id }) => (
+                <Input
+                  id={id}
+                  type="number"
+                  min={0}
+                  max={settings.ent_max_score}
+                  inputMode="numeric"
+                  enterKeyHint="go"
+                  placeholder="0"
+                  value={score}
+                  onChange={(event) => setScore(event.target.value)}
+                  className="h-16 text-3xl font-bold text-primary-ink"
+                />
+              )}
+            </Field>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Object.entries(settings.ent_structure).map(([key, max]) => (
+                <Field key={key} label={`${SECTION_LABELS[key] ?? key} (0–${max})`}>
+                  {({ id }) => (
+                    <Input
+                      id={id}
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={max}
+                      value={sections[key] ?? ''}
+                      onChange={(event) => setSections({ ...sections, [key]: event.target.value })}
+                    />
+                  )}
+                </Field>
+              ))}
+              <p className="sm:col-span-2 rounded-xl bg-primary-soft px-4 py-3 flex items-center justify-between text-primary-ink">
+                <span className="font-medium">{t('total')}</span>
+                <b className="text-2xl">{sectionTotal}</b>
+              </p>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setDetailed((value) => !value)}
+            className="-ml-2 px-2 min-h-[44px] rounded-lg text-[15px] text-primary-ink font-semibold hover:bg-primary-soft"
+          >
+            {detailed ? t('enterTotal') : t('detailed')}
+          </button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label={t('subject1')}>
+              {({ id }) => (
+                <Select id={id} value={subject1} onChange={(event) => setSubject1(event.target.value)}>
+                  <option value="">—</option>
+                  {subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {locale === 'kk' && subject.name_kk ? subject.name_kk : subject.name_ru}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label={t('subject2')}>
+              {({ id }) => (
+                <Select id={id} value={subject2} onChange={(event) => setSubject2(event.target.value)}>
+                  <option value="">—</option>
+                  {subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {locale === 'kk' && subject.name_kk ? subject.name_kk : subject.name_ru}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
           </div>
-        )}
 
-        <button onClick={() => setDetailed((value) => !value)} className="text-xs text-corpBlue font-medium">
-          {detailed ? t('total') : t('detailed')}
-        </button>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('subject1')}>
-            {({ id }) => (
-              <Select id={id} value={subject1} onChange={(event) => setSubject1(event.target.value)}>
-                <option value="">—</option>
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {locale === 'kk' && subject.name_kk ? subject.name_kk : subject.name_ru}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-          <Field label={t('subject2')}>
-            {({ id }) => (
-              <Select id={id} value={subject2} onChange={(event) => setSubject2(event.target.value)}>
-                <option value="">—</option>
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {locale === 'kk' && subject.name_kk ? subject.name_kk : subject.name_ru}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-        </div>
-
-        <div className="flex gap-2">
-          <Button fullWidth onClick={showChances} disabled={!finalScore}>
-            {t('calculate')}
-          </Button>
-          <Button variant="soft" loading={pending} onClick={saveToProfile}>
-            {t('saveToProfile')}
-          </Button>
-        </div>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <Button type="submit" size="lg" className="sm:flex-1" disabled={!finalScore}>
+              {t('calculate')}
+            </Button>
+            <Button variant="secondary" size="lg" loading={pending} onClick={saveToProfile}>
+              {t('saveToProfile')}
+            </Button>
+          </div>
+        </form>
       </Card>
 
       <AuthWall open={wall} onClose={() => setWall(false)} reason="score" />

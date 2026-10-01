@@ -23,11 +23,11 @@ export function CookieBanner() {
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-20 md:bottom-4 inset-x-0 z-50 px-4">
-      <div className="mx-auto md:max-w-md bg-white border border-gray-100 shadow-modal rounded-2xl p-4 flex items-center gap-3">
-        <p className="text-xs text-gray-600 flex-1">
+    <div className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] md:bottom-6 inset-x-0 z-50 px-3 md:px-6 pointer-events-none">
+      <div className="pointer-events-auto mx-auto md:mx-0 md:max-w-md bg-surface border border-line shadow-modal rounded-2xl p-4 flex items-center gap-3 animate-fade-in">
+        <p className="text-sm text-body flex-1">
           {t('cookieText')}{' '}
-          <NextLink href={`/${locale}/privacy`} className="text-corpBlue underline">
+          <NextLink href={`/${locale}/privacy`} className="text-primary-ink underline">
             {t('privacy')}
           </NextLink>
         </p>

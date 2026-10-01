@@ -24,23 +24,27 @@ export function LanguageSwitcher({ variant = 'header' }: { variant?: 'header' | 
 
   return (
     <div
+      role="group"
+      aria-label="Язык / Тіл"
       className={cn(
-        'inline-flex rounded-lg overflow-hidden text-xs font-bold',
-        variant === 'header' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500',
+        'inline-flex p-1 rounded-xl text-sm font-semibold',
+        variant === 'header' ? 'bg-white/15 text-white' : 'bg-subtle text-muted',
       )}
     >
       {(['ru', 'kk'] as const).map((code) => (
         <button
           key={code}
+          type="button"
           onClick={() => switchTo(code)}
-          aria-current={locale === code}
+          aria-pressed={locale === code}
+          lang={code}
           className={cn(
-            'px-2.5 py-1.5 transition-colors',
+            'min-w-[44px] h-9 px-2.5 rounded-lg transition-colors',
             locale === code
               ? variant === 'header'
-                ? 'bg-white text-corpBlue'
-                : 'bg-corpBlue text-white'
-              : '',
+                ? 'bg-white text-primary shadow-sm'
+                : 'bg-surface text-ink shadow-sm'
+              : 'hover:text-ink',
           )}
         >
           {code === 'ru' ? 'RU' : 'KZ'}
