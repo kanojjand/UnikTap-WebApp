@@ -1,0 +1,35 @@
+# UnikTap на https://uniktap.cclab.kz. Подключается к общей сети туннеля cclab-apps (~/apps/compose.yml);
+# в панели туннеля маршрут: uniktap.cclab.kz -> http://uniktap:3000. Ключи Supabase лежат в .env рядом.
+name: uniktap
+
+services:
+  uniktap:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    image: uniktap-web
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - apps
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 768m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  apps:
+    external: true

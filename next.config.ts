@@ -25,6 +25,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // На своём сервере (Docker) собираем компактный standalone-вариант; Vercel это не мешает
+  output: process.env.NEXT_OUTPUT === 'standalone' ? 'standalone' : undefined,
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],
