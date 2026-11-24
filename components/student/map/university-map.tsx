@@ -21,7 +21,7 @@ const PIN_COLORS: Record<string, string> = {
   medium: '#eab308',
   low: '#dc2626',
   below_threshold: '#94a3b8',
-  default: '#1E3A8A',
+  default: '#0B7FC4',
 }
 
 function pinIcon(color: string, label?: string) {
@@ -67,7 +67,23 @@ export interface MapPoint {
 export function UniversityMap({ points, cities, locale }: { points: MapPoint[]; cities: City[]; locale: string }) {
   const t = useTranslations('map')
   const tc = useTranslations('chance')
-  const [zoom, setZoom] = useState(5)
+  // Если почти все вузы в одном городе (сейчас — Шымкент), сразу открываем карту на нём
+  const start = useMemo(() => {
+    const counts = new Map<number, number>()
+    for (const point of points) {
+      const id = point.university.city_id as number
+      if (id) counts.set(id, (counts.get(id) ?? 0) + 1)
+    }
+    const [topId, topCount] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0] ?? [0, 0]
+    const city = cities.find((c) => c.id === topId)
+    if (city?.lat && city?.lng && points.length > 0 && topCount / points.length >= 0.7) {
+      return { center: [city.lat, city.lng] as [number, number], zoom: 12 }
+    }
+    return { center: KZ_CENTER, zoom: 5 }
+    // начальный вид считаем один раз
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const [zoom, setZoom] = useState(start.zoom)
   const [selected, setSelected] = useState<MapPoint | null>(null)
   const [me, setMe] = useState<[number, number] | null>(null)
   const [locating, setLocating] = useState(false)
@@ -110,7 +126,7 @@ export function UniversityMap({ points, cities, locale }: { points: MapPoint[]; 
 
   return (
     <div className="relative h-full isolate md:rounded-2xl md:border md:border-line overflow-hidden">
-      <MapContainer center={KZ_CENTER} zoom={5} scrollWheelZoom className="h-full w-full z-0">
+      <MapContainer center={start.center} zoom={start.zoom} scrollWheelZoom className="h-full w-full z-0">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -9,7 +9,7 @@ const KZ_CENTER: [number, number] = [48.02, 66.92]
 
 const pinIcon = L.divIcon({
   className: '',
-  html: `<span style="display:block;width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#1E3A8A;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></span>`,
+  html: `<span style="display:block;width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#0B7FC4;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></span>`,
   iconSize: [22, 22],
   iconAnchor: [11, 22],
 })

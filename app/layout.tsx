@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { getLocale } from 'next-intl/server'
-import { inter } from './fonts'
+import { montserrat, onest } from './fonts'
 import { Analytics } from '@vercel/analytics/next'
 import { ServiceWorkerRegister } from '@/components/student/sw-register'
 import { AppToaster } from '@/components/ui/app-toaster'
@@ -28,8 +28,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F5F7FA' },
-    { media: '(prefers-color-scheme: dark)', color: '#0B1220' },
+    { media: '(prefers-color-scheme: light)', color: '#F6F6F3' },
+    { media: '(prefers-color-scheme: dark)', color: '#0A0A0A' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     // Класс темы ставит THEME_SCRIPT до гидратации — поэтому suppressHydrationWarning
-    <html lang={locale} className={inter.variable} suppressHydrationWarning>
+    <html lang={locale} className={`${onest.variable} ${montserrat.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

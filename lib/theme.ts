@@ -13,7 +13,7 @@ export const THEME_STORAGE_KEY = 'uniktap-theme'
 export const THEME_CHANGE_EVENT = 'uniktap-theme-change'
 
 /** Цвет панели браузера и статус-бара — совпадает с --canvas. */
-const THEME_COLORS: Record<ResolvedTheme, string> = { light: '#F5F7FA', dark: '#0B1220' }
+const THEME_COLORS: Record<ResolvedTheme, string> = { light: '#F6F6F3', dark: '#0A0A0A' }
 
 export function readThemePreference(): ThemePreference {
   try {

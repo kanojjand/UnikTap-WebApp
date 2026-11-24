@@ -12,20 +12,22 @@
  * Админка обёрнута в .theme-light и всегда светлая.
  */
 @layer base {
+  /* Фирменный стиль CC Lab: «бумажный» светлый фон, чёрный текст,
+     небесный акцент #1AA3F0. Кнопки — чуть темнее (#0B7FC4), чтобы белый текст читался. */
   :root,
   .theme-light {
     color-scheme: light;
-    --canvas: 245 247 250;
+    --canvas: 246 246 243;
     --surface: 255 255 255;
-    --subtle: 241 245 249;
-    --line: 226 232 240;
-    --ink: 15 23 42;
-    --body: 51 65 85;
-    --muted: 88 101 122;
-    --primary: 30 58 138;
-    --primary-hover: 30 64 175;
-    --primary-ink: 30 58 138;
-    --primary-soft: 234 241 254;
+    --subtle: 238 240 238;
+    --line: 224 226 222;
+    --ink: 10 10 10;
+    --body: 52 56 60;
+    --muted: 96 100 106;
+    --primary: 11 127 196;
+    --primary-hover: 8 109 168;
+    --primary-ink: 8 104 162;
+    --primary-soft: 228 243 252;
     --success: 22 101 52;
     --success-soft: 220 252 231;
     --warning: 133 77 14;
@@ -37,17 +39,17 @@
 
   .theme-dark {
     color-scheme: dark;
-    --canvas: 11 18 32;
-    --surface: 19 28 46;
-    --subtle: 28 39 64;
-    --line: 38 50 74;
-    --ink: 241 245 249;
-    --body: 203 213 225;
-    --muted: 148 163 184;
-    --primary: 53 99 233;
-    --primary-hover: 41 82 211;
-    --primary-ink: 157 185 255;
-    --primary-soft: 26 39 72;
+    --canvas: 10 10 10;
+    --surface: 21 21 21;
+    --subtle: 31 31 31;
+    --line: 44 44 44;
+    --ink: 245 245 242;
+    --body: 208 208 204;
+    --muted: 150 150 146;
+    --primary: 26 163 240;
+    --primary-hover: 70 181 243;
+    --primary-ink: 92 194 255;
+    --primary-soft: 13 37 54;
     --success: 110 231 160;
     --success-soft: 15 42 28;
     --warning: 252 211 77;
@@ -55,6 +57,11 @@
     --danger: 252 165 165;
     --danger-soft: 58 21 24;
     --danger-solid: 220 38 38;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-montserrat), var(--font-onest), system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
 
   html {

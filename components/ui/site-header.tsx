@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import { LanguageSwitcher } from '@/components/student/language-switcher'
 import { cn } from '@/lib/utils'
+import { CcLabBadge } from './cclab-badge'
 import { Logo } from './logo'
 import { ThemeSwitcher } from './theme-switcher'
 import { NAV_ITEMS, isActive } from './nav-items'
@@ -23,9 +24,12 @@ export function SiteHeader() {
   return (
     <header className="hidden md:block sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-line">
       <div className="container-app h-16 flex items-center gap-6">
-        <Link href="/" aria-label="UnikTap — на главную" className="shrink-0 rounded-lg">
-          <Logo />
-        </Link>
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href="/" aria-label="UnikTap — на главную" className="shrink-0 rounded-lg">
+            <Logo />
+          </Link>
+          <CcLabBadge className="hidden lg:inline-flex" />
+        </div>
 
         <nav aria-label="Основная навигация" className="flex-1">
           <ul className="flex items-center gap-1">

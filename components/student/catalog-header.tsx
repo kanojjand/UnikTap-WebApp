@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { track } from '@/lib/analytics'
 import { Logo } from '@/components/ui/logo'
+import { CcLabBadge } from '@/components/ui/cclab-badge'
 import { LanguageSwitcher } from './language-switcher'
 import { ThemeToggle } from '@/components/ui/theme-switcher'
 
@@ -49,12 +50,19 @@ export function CatalogHeader() {
       <div className="flex items-center justify-between gap-3 mb-5 md:hidden">
         <Logo priority />
         <div className="flex items-center gap-2">
+          <CcLabBadge className="hidden min-[380px]:inline-flex" />
           <ThemeToggle />
           <LanguageSwitcher variant="plain" />
         </div>
       </div>
 
-      <h1 className="text-[28px] md:text-4xl font-bold tracking-tight text-ink leading-tight">{t('heroTitle')}</h1>
+      <p className="inline-flex items-center gap-2 mb-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-ink">
+        <svg viewBox="0 0 100 100" className="w-3 h-3" aria-hidden>
+          <path d="M50 0 L60 40 L100 50 L60 60 L50 100 L40 60 L0 50 L40 40 Z" fill="currentColor" />
+        </svg>
+        UnikTap · Шымкент
+      </p>
+      <h1 className="font-display text-[30px] md:text-5xl font-extrabold tracking-tight text-ink leading-[1.08]">{t('heroTitle')}</h1>
       <p className="text-[15px] md:text-lg text-muted mt-1.5 mb-5">{t('heroText')}</p>
 
       <form

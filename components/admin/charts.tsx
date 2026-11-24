@@ -7,7 +7,7 @@ import {
 import { Download } from 'lucide-react'
 import { toCsv } from '@/lib/utils'
 
-const BLUES = ['#1E3A8A', '#2748A6', '#3B62C4', '#5C82DA', '#8AA7E8', '#B3C6F1', '#64748B', '#94A3B8']
+const BLUES = ['#0B7FC4', '#1AA3F0', '#46B5F3', '#7FCBF7', '#B1DFFA', '#D8EFFC', '#64748B', '#94A3B8']
 
 function ChartCard({
   title,
@@ -52,7 +52,7 @@ export function TrafficChart({ data }: { data: { day: string; sessions: number; 
           <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="#94A3B8" />
           <YAxis tick={{ fontSize: 11 }} stroke="#94A3B8" allowDecimals={false} />
           <Tooltip />
-          <Line type="monotone" dataKey="sessions" name="Сессии" stroke="#1E3A8A" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="sessions" name="Сессии" stroke="#0B7FC4" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="university_views" name="Просмотры ВУЗов" stroke="#5C82DA" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
@@ -92,7 +92,7 @@ export function BarsChart({
             </>
           )}
           <Tooltip />
-          <Bar dataKey={valueKey} fill="#1E3A8A" radius={[6, 6, 0, 0]} />
+          <Bar dataKey={valueKey} fill="#0B7FC4" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

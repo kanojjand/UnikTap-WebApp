@@ -27,8 +27,8 @@ export default {
         danger: { DEFAULT: token('danger'), soft: token('danger-soft'), solid: token('danger-solid') },
 
         // Фирменные цвета — остаются для админки
-        corpBlue: '#1E3A8A',
-        corpBlueHover: '#1E40AF',
+        corpBlue: '#0B7FC4',
+        corpBlueHover: '#086DA8',
         softBlue: '#EFF6FF',
         slateBg: '#F8FAFC',
         whatsapp: '#25D366',
@@ -47,7 +47,8 @@ export default {
         modal: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['var(--font-onest)', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['var(--font-montserrat)', 'var(--font-onest)', 'system-ui', 'sans-serif'],
       },
       keyframes: {
         'sheet-up': { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } },

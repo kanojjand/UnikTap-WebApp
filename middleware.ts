@@ -12,7 +12,9 @@ const intlMiddleware = createIntlMiddleware(routing)
  */
 export async function middleware(request: NextRequest) {
   const isAdmin = request.nextUrl.pathname.startsWith('/admin')
-  const response = isAdmin ? NextResponse.next({ request }) : intlMiddleware(request)
+  // /pitch — страница для выступления, без языкового префикса
+  const isPitch = request.nextUrl.pathname === '/pitch'
+  const response = isAdmin || isPitch ? NextResponse.next({ request }) : intlMiddleware(request)
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
